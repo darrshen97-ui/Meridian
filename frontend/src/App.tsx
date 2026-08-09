@@ -7,6 +7,8 @@ import { Loading } from "./components/States";
 import { Accounts } from "./pages/Accounts";
 import { Dashboard } from "./pages/Dashboard";
 import { Documents } from "./pages/Documents";
+import { Review } from "./pages/Review";
+import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
 import { Welcome } from "./pages/Welcome";
 
@@ -37,14 +39,14 @@ function Gate() {
         <Route index element={<Dashboard />} />
         <Route path="accounts" element={<Accounts />} />
         <Route path="transactions" element={<Transactions />} />
-        <Route path="review" element={<Placeholder title="Review queue" milestone={9} />} />
+        <Route path="review" element={<Review />} />
         <Route path="reconciliation"
           element={<Placeholder title="Reconciliation" milestone={10} />} />
         <Route path="documents" element={<Documents />} />
         <Route path="coach" element={<Placeholder title="Coach" milestone={11} />} />
         <Route path="budgets"
           element={<Placeholder title="Budgets & Simulator" milestone={12} />} />
-        <Route path="settings" element={<Placeholder title="Settings" milestone={9} />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>
   );

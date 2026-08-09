@@ -181,3 +181,29 @@ without defining the obligations. Card balances are the one deterministic, alway
 obligation the data actually contains. Predicting upcoming bills from recurrence detection
 would be a guess — Iteration 2 material. The dashboard states the formula in plain language
 under the number so it's never mysterious.
+
+## D-017 · 2026-08-09 · Cryptic-descriptor confidence is capped in code, not prompt
+
+**Decision:** Processor descriptors that hide the real merchant (`SQ *`, `TST*`, `PP*`,
+`PAYPAL *`, `POS DEBIT`, …) have their model confidence capped at 0.5 deterministically
+after the LLM call. They can only ever auto-apply through the user's own corrections in the
+rules pass — never through a model guess.
+
+**Why:** Tested against a real local model (qwen2.5:3b-instruct running in the dev
+container). The small model is confidently wrong about these descriptors (`TST* MERIDIAN 04`
+→ "Utilities, 0.8"), and packing more calibration rules into the system prompt made it
+*more* erratic (it started misfiling obvious subscriptions). The brief's own principle
+applies: judgment in the model, hard guarantees in code. The prompt stays short; the
+guarantee is deterministic.
+
+## D-018 · 2026-08-09 · Real-model validation ran on the 3B; the 7B stays the default
+
+**Decision:** Development-time prompt testing used `qwen2.5:3b-instruct` (the dev container
+is CPU-only; the 7B would be impractically slow there). The shipped default remains
+`qwen2.5:7b-instruct` per the build plan, with the 3B offered in Settings and by the
+first-use speed test.
+
+**Why:** The 3B is the *worst realistic case* for prompt quality — if the pipeline holds
+calibrated behavior on it (ambiguous → review, clear merchants → auto-file), the 7B only
+improves from there. Observed on real hardware: ~35-55 s per 15-transaction batch on CPU,
+28/63 auto-applied, 35/63 correctly held for review, zero hallucinated categories accepted.

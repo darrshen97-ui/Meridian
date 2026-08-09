@@ -86,6 +86,11 @@ class LedgerService:
         corrections = UserCorrectionRepository(self.session)
         await corrections.add(user_id, merchant_pattern=pattern,
                               category_id=category_id)
+        from app.services.training import append_training_example
+
+        append_training_example(
+            user_id, description=updated.description_raw, merchant=updated.merchant,
+            amount_minor=updated.amount_minor, category_name=category.name)
         await AuditRepository(self.session).append(
             user_id, event="category.overridden",
             detail={"transaction_id": transaction_id, "category_id": category_id,
