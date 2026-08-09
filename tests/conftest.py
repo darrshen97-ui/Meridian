@@ -13,12 +13,18 @@ async def client(tmp_path, monkeypatch):
     """An HTTP client against a fresh app instance with an isolated database."""
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/test.db")
     monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    # Mock provider: instant and reliable by default; failure tests override.
+    monkeypatch.setenv("MOCK_MIN_LATENCY", "0")
+    monkeypatch.setenv("MOCK_MAX_LATENCY", "0")
+    monkeypatch.setenv("MOCK_FAILURE_RATE", "0")
 
     from app.core.config import get_settings
     from app.core import db as db_module
+    from app.providers.financial import reset_provider_state
 
     get_settings.cache_clear()
     db_module.reset_db_state()
+    reset_provider_state()
 
     from app.models import Base
 
@@ -39,6 +45,7 @@ async def client(tmp_path, monkeypatch):
     await engine.dispose()
     get_settings.cache_clear()
     db_module.reset_db_state()
+    reset_provider_state()
 
 
 @pytest.fixture

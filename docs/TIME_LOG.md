@@ -11,7 +11,7 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | 3 | Auth + profiles + isolation test | Aug 9, 2026 | ~50 min | Isolation proven both directions (owner sees data, other profile sees zero) |
 | 4 | Mock data generator + documents | Aug 9, 2026 | ~2 h | Largest milestone so far; determinism verified by manifest diff across two runs |
 | 5 | Statement parsers + ingestion | Aug 9, 2026 | ~1.5 h | All 117 sample documents parse and cross-check against the ledger exactly |
-| 6 | Provider layer + sync + SSE | — | — | |
+| 6 | Provider layer + sync + SSE | Aug 9, 2026 | ~1.5 h | Tests caught an account-duplication bug and a sync-reporting flaw; both fixed |
 | 7 | Design system + shell | — | — | |
 | 8 | Dashboard / Accounts / Transactions / Documents | — | — | |
 | 9 | Local model + categorization + learning loop | — | — | |

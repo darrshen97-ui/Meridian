@@ -140,3 +140,31 @@ consumes the same module.
 **Why:** One matching algorithm, one place, tested once — and importing a PDF after an OFX
 (or after provider sync) can never double-book a transaction. OFX truncates descriptions to
 32 chars, so the fuzzy layer is genuinely needed, not speculative.
+
+## D-013 · 2026-08-09 · Mock provider identity = email local part
+
+**Decision:** The MockProvider maps a signed-in profile to its fixture by the local part of
+the profile's email (`jordan@meridian.demo` → `provider_fixtures/jordan.json`). Profiles
+without a fixture sync zero accounts, cleanly.
+
+**Why:** The schema has no provider-credentials table (real credential linking is the Plaid
+work deferred to Iteration 2), and demo emails are stable generator outputs. The mapping
+lives in one place and disappears when PlaidProvider replaces the mock.
+
+## D-014 · 2026-08-09 · `accounts.provider_key` column (migration 0002)
+
+**Decision:** Added a nullable `provider_key` to accounts, carrying the provider's stable
+account identity. Sync upserts by it, and adopts statement-created accounts (matching
+mask+type, or type+display-name for maskless accounts) by setting it on first sync.
+
+**Why:** The §7 schema had no provider-side account identity, so incremental sync would have
+had to guess by mask every run — and would have duplicated accounts created by statement
+imports (a bug the milestone 6 tests actually caught). Migration 0002 is reversible.
+
+## D-015 · 2026-08-09 · Balance-refresh failure does not fail an account's sync
+
+**Decision:** If an account's transactions ingest but its balance fetch exhausts retries, the
+account reports `ok` with a `balance_error` note instead of `failed`.
+
+**Why:** The rows are already durably ingested at that point; reporting the account as failed
+both lied about the ledger and (before the fix) dropped the ingested rows from the summary.

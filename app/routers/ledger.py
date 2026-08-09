@@ -39,6 +39,14 @@ async def list_transactions(
     return [asdict(x) for x in items]
 
 
+@router.get("/balances")
+async def latest_balances(session: DbSession, user: CurrentUser):
+    from app.repositories.sync import BalanceRepository
+
+    latest = await BalanceRepository(session).latest_by_account(user.id)
+    return list(latest.values())
+
+
 @router.get("/categories")
 async def list_categories(session: DbSession, user: CurrentUser):
     return [asdict(x) for x in await LedgerService(session).list_categories(user.id)]

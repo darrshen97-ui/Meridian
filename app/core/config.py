@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     session_hours: int = 24
     cookie_secure: bool = False  # enabled in deployed (HTTPS) configuration only
 
+    sample_data_dir: Path = Path("sample_data")
+    mock_min_latency: float = 0.2
+    mock_max_latency: float = 0.9
+    mock_failure_rate: float = 0.05
+
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen2.5:7b-instruct"
     llm_provider: str = "ollama"

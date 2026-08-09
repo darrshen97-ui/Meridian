@@ -62,6 +62,9 @@ class Account(Base):
     institution_id: Mapped[int] = mapped_column(ForeignKey("institutions.id"))
     display_name: Mapped[str] = mapped_column(String(120))
     mask: Mapped[str | None] = mapped_column(String(4))
+    # The provider's stable account identity; lets incremental sync upsert
+    # instead of guessing by mask (docs/DECISIONS.md D-014).
+    provider_key: Mapped[str | None] = mapped_column(String(60), index=True)
     type: Mapped[str] = mapped_column(String(20))
     currency: Mapped[str] = mapped_column(String(3), default="USD")
     is_liquid: Mapped[bool] = mapped_column(Boolean, default=False)  # drives spending power

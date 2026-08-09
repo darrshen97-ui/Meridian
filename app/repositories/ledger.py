@@ -61,12 +61,50 @@ class AccountRepository:
         )
         return self._map(row) if row else None
 
+    async def get_by_provider_key(self, user_id: int, provider_key: str) -> AccountInfo | None:
+        row = await self.session.scalar(
+            select(Account).where(Account.user_id == user_id,
+                                  Account.provider_key == provider_key))
+        return self._map(row) if row else None
+
+    async def adopt_provider_key(self, user_id: int, *, provider_key: str,
+                                 mask: str | None, type: str,
+                                 display_name: str) -> AccountInfo | None:
+        """Link a provider account to one created earlier from a statement.
+
+        Match by mask+type when the document carried a mask; otherwise by
+        type+display name (payment apps and exchanges have no mask).
+        """
+        stmt = select(Account).where(Account.user_id == user_id,
+                                     Account.provider_key.is_(None),
+                                     Account.type == type)
+        if mask:
+            stmt = stmt.where(Account.mask == mask)
+        else:
+            stmt = stmt.where(Account.display_name == display_name)
+        row = await self.session.scalar(stmt)
+        if row is None:
+            return None
+        row.provider_key = provider_key
+        return self._map(row)
+
+    async def mark_closed(self, user_id: int, account_id: int,
+                          closed_at: dt.date) -> None:
+        row = await self.session.scalar(
+            select(Account).where(Account.user_id == user_id,
+                                  Account.id == account_id))
+        if row is not None and row.closed_at is None:
+            row.closed_at = closed_at
+
     async def create(self, user_id: int, *, institution_id: int, display_name: str,
                      type: str, mask: str | None = None, currency: str = "USD",
-                     is_liquid: bool = False, opened_at: dt.date | None = None) -> int:
+                     is_liquid: bool = False, opened_at: dt.date | None = None,
+                     provider_key: str | None = None,
+                     closed_at: dt.date | None = None) -> int:
         row = Account(
             user_id=user_id, institution_id=institution_id, display_name=display_name,
-            type=type, mask=mask, currency=currency, is_liquid=is_liquid, opened_at=opened_at,
+            type=type, mask=mask, currency=currency, is_liquid=is_liquid,
+            opened_at=opened_at, provider_key=provider_key, closed_at=closed_at,
         )
         self.session.add(row)
         await self.session.flush()
@@ -142,6 +180,25 @@ class TransactionRepository:
                                       Transaction.id == transaction_id))
         if row is not None and row.source_document_id is None:
             row.source_document_id = document_id
+
+    async def attach_external_id(self, user_id: int, transaction_id: int,
+                                 external_id: str, merchant: str | None = None) -> None:
+        """Record the provider identity on a row that came from a statement."""
+        row = await self.session.scalar(
+            select(Transaction).where(Transaction.user_id == user_id,
+                                      Transaction.id == transaction_id))
+        if row is not None and row.external_id is None:
+            row.external_id = external_id
+            if merchant and row.merchant is None:
+                row.merchant = merchant
+
+    async def existing_external_ids(self, user_id: int, account_id: int) -> set[str]:
+        rows = await self.session.scalars(
+            select(Transaction.external_id).where(
+                Transaction.user_id == user_id,
+                Transaction.account_id == account_id,
+                Transaction.external_id.is_not(None)))
+        return set(rows)
 
     @staticmethod
     def _map(r: Transaction) -> TransactionInfo:
