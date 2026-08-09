@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* §13 design tokens — the source of truth for every color in the app. */
+:root {
+  --canvas: #fbfbfa;
+  --surface: #ffffff;
+  --ink: #16181d;
+  --ink-muted: #6e7178;
+  --ink-faint: #9a9ca1;
+  --rule: #e6e6e4;
+  --rule-strong: #c9c9c6;
+  --accent: #14594a;
+  --accent-wash: #e8f0ed;
+  --positive: #14594a;
+  --negative: #1f2126;
+  --attention: #a9542a;
+  --critical: #8c2f26;
+}
+
+.dark {
+  --canvas: #0e0f11;
+  --surface: #16181b;
+  --ink: #ededea;
+  --ink-muted: #9b9ea3;
+  --ink-faint: #6e7178;
+  --rule: #26282c;
+  --rule-strong: #3a3d42;
+  --accent: #5fa891;
+  --accent-wash: #1b2622;
+  --positive: #5fa891;
+  --negative: #ededea;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.tabular {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}

@@ -80,3 +80,21 @@ Transfers, Crypto, Loan Payments, Cash, Taxes, Uncategorized) seeded with `is_sy
 **Why:** The brief requires categories but doesn't enumerate them. A fixed system set makes
 LLM output validation strict (anything outside the list goes to review) and keeps the two demo
 profiles comparable.
+
+## D-007 · 2026-08-09 · Session secret auto-generated and persisted
+
+**Decision:** If `JWT_SECRET` is not set, the app generates one on first run and persists it to
+`DATA_DIR/.jwt_secret` (mode 0600 where supported). An explicit env value always wins.
+
+**Why:** The double-click zip must work with zero configuration (non-negotiable #3), but a
+random per-boot secret would sign everyone out on every launch. Persisting the generated
+secret keeps sessions across restarts with no setup. Deployments set `JWT_SECRET` explicitly.
+
+## D-008 · 2026-08-09 · Enum-like columns are constrained strings, not native enums
+
+**Decision:** Columns like `accounts.type`, `transactions.source`, and finding kinds are
+`VARCHAR` with `CHECK` constraints rather than native enum types.
+
+**Why:** Native Postgres `CREATE TYPE` enums are outside the SQLite ∩ PostgreSQL intersection
+(D-001) and make additive migrations awkward. Check constraints give the same integrity
+portably, and valid values live in one place in `app/models/`.

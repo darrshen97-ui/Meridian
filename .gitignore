@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# App runtime data — never commit user data
+data/
+.env
+
+# Node (frontend build-time only)
+frontend/node_modules/
+
+# Built frontend assets are produced by the packaging step
+app/static/*
+!app/static/.gitkeep
+
+# Packaging output
+dist/

@@ -6,9 +6,9 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | Milestone | Description | Date(s) | Time spent | Notes |
 |---|---|---|---|---|
 | 0 | Read brief, build plan, decisions log, project setup | Aug 9, 2026 | ~1 h | Repo creation blocked by GitHub App permissions; parked on orphan branch |
-| 1 | Scaffold + health endpoint | — | — | |
-| 2 | Data model + Alembic | — | — | |
-| 3 | Auth + profiles + isolation test | — | — | |
+| 1 | Scaffold + health endpoint | Aug 9, 2026 | ~45 min | Includes frontend toolchain proof (Vite build → app/static, served by FastAPI) |
+| 2 | Data model + Alembic | Aug 9, 2026 | ~40 min | All 14 tables; up/down/up verified; schema-vs-models drift test added |
+| 3 | Auth + profiles + isolation test | Aug 9, 2026 | ~50 min | Isolation proven both directions (owner sees data, other profile sees zero) |
 | 4 | Mock data generator + documents | — | — | |
 | 5 | Statement parsers + ingestion | — | — | |
 | 6 | Provider layer + sync + SSE | — | — | |
