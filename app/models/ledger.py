@@ -24,9 +24,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, utcnow
 
-INSTITUTION_KINDS = ("bank", "credit", "payment_app", "exchange", "loan")
+INSTITUTION_KINDS = ("bank", "credit", "payment_app", "exchange", "loan", "brokerage")
 INSTITUTION_STATUSES = ("active", "closed")
-ACCOUNT_TYPES = ("checking", "savings", "credit_card", "loan", "crypto", "payment_app")
+# "investment" is an addition to the brief's §7 list — Profile 2's Fidelity brokerage
+# fits none of the listed types. Recorded as D-009 in docs/DECISIONS.md.
+ACCOUNT_TYPES = (
+    "checking", "savings", "credit_card", "loan", "crypto", "payment_app", "investment",
+)
 TRANSACTION_TYPES = ("debit", "credit", "transfer")
 TRANSACTION_SOURCES = ("statement", "provider", "manual")
 CATEGORY_SOURCES = ("rules", "llm", "user")

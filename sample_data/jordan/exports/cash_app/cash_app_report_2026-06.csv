@@ -1,0 +1,9 @@
+Transaction ID,Date,Transaction Type,Currency,Amount,Fee,Net Amount,Notes,Name of sender/receiver,Account
+ca-202606-00001,2026-06-02 10:11:14 EDT,Cash App Pay,USD,-19.44,0,-19.44,,Vinyl Fair,Cash App
+ca-202606-00002,2026-06-11 11:22:14 EDT,Add Cash,USD,100.00,0,100.00,,Jordan Reyes,Cash App
+ca-202606-00003,2026-06-12 12:33:14 EDT,Cash App Pay,USD,-35.37,0,-35.37,,N Mississippi Mkt,Cash App
+ca-202606-00004,2026-06-17 13:44:14 EDT,Cash App Pay,USD,-19.55,0,-19.55,,Food Carts Pdx,Cash App
+ca-202606-00005,2026-06-17 14:55:14 EDT,Cash App Pay,USD,-22.99,0,-22.99,,Food Carts Pdx,Cash App
+ca-202606-00006,2026-06-17 15:06:14 EDT,Cash App Pay,USD,-31.09,0,-31.09,,Vinyl Fair,Cash App
+ca-202606-00007,2026-06-25 16:17:14 EDT,Received,USD,19.58,0,19.58,,J. Doe,Cash App
+ca-202606-00008,2026-06-27 17:28:14 EDT,Cash App Pay,USD,-7.90,0,-7.90,,Vinyl Fair,Cash App

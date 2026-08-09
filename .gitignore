@@ -17,3 +17,4 @@ app/static/*
 
 # Packaging output
 dist/
+frontend/tsconfig.tsbuildinfo

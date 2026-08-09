@@ -98,3 +98,23 @@ secret keeps sessions across restarts with no setup. Deployments set `JWT_SECRET
 **Why:** Native Postgres `CREATE TYPE` enums are outside the SQLite ∩ PostgreSQL intersection
 (D-001) and make additive migrations awkward. Check constraints give the same integrity
 portably, and valid values live in one place in `app/models/`.
+
+## D-009 · 2026-08-09 · Added `investment` account type and `brokerage` institution kind
+
+**Decision:** The §7 schema lists account types `checking | savings | credit_card | loan |
+crypto | payment_app`, but §9 gives Profile 2 a Fidelity brokerage account and §2/§3 discuss
+excluding investments from spending power. Added `investment` to the account-type constraint
+and `brokerage` to institution kinds (initial migration regenerated — nothing had shipped).
+
+**Why:** Without it Profile 2 cannot be represented, and spending power's "excludes
+investments" rule needs a type to exclude. This is a small internal inconsistency in the
+brief (flagged per §20.4).
+
+## D-010 · 2026-08-09 · ASCII account masks in generated documents
+
+**Decision:** Generated statements mask account numbers as `XXXXXX4417` / `*8123` rather
+than the `••4417` style used in UI copy.
+
+**Why:** The `•` glyph doesn't survive PDF text extraction cleanly (`(cid:127)` artifacts in
+pdfplumber), which would sabotage parser account-matching — and real statements use
+ASCII masking anyway. The UI keeps the typographic `••` form.

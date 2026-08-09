@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 141e693b6413
+Revision ID: fd9aa08b947e
 Revises: 
-Create Date: 2026-08-09 21:47:27.662257
+Create Date: 2026-08-09 21:57:56.554223
 
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = '141e693b6413'
+revision = 'fd9aa08b947e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -82,7 +82,7 @@ def upgrade() -> None:
     sa.Column('status', sa.String(length=20), nullable=False),
     sa.Column('closed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('closed_reason', sa.String(length=255), nullable=True),
-    sa.CheckConstraint("kind IN ('bank', 'credit', 'payment_app', 'exchange', 'loan')", name=op.f('ck_institutions_kind')),
+    sa.CheckConstraint("kind IN ('bank', 'credit', 'payment_app', 'exchange', 'loan', 'brokerage')", name=op.f('ck_institutions_kind')),
     sa.CheckConstraint("status IN ('active', 'closed')", name=op.f('ck_institutions_status')),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_institutions_user_id_users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_institutions'))
@@ -118,7 +118,7 @@ def upgrade() -> None:
     sa.Column('is_liquid', sa.Boolean(), nullable=False),
     sa.Column('opened_at', sa.Date(), nullable=True),
     sa.Column('closed_at', sa.Date(), nullable=True),
-    sa.CheckConstraint("type IN ('checking', 'savings', 'credit_card', 'loan', 'crypto', 'payment_app')", name=op.f('ck_accounts_type')),
+    sa.CheckConstraint("type IN ('checking', 'savings', 'credit_card', 'loan', 'crypto', 'payment_app', 'investment')", name=op.f('ck_accounts_type')),
     sa.ForeignKeyConstraint(['institution_id'], ['institutions.id'], name=op.f('fk_accounts_institution_id_institutions')),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_accounts_user_id_users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_accounts'))
