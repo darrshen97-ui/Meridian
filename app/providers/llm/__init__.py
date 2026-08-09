@@ -25,7 +25,8 @@ def get_llm_provider() -> LLMProvider:
         else:
             overrides = read_app_settings()
             model = overrides.get("ollama_model") or settings.ollama_model
-            _provider = OllamaProvider(settings.ollama_base_url, model)
+            _provider = OllamaProvider(settings.ollama_base_url, model,
+                                       timeout=settings.ollama_timeout)
     return _provider
 
 

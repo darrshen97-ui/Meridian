@@ -221,3 +221,20 @@ the ledger backwards, rather than requiring a stored opening balance.
 recomputation, and the anchor approach needs no schema addition. A useful property falls out:
 a statement-only transaction (the planted CHECK #1042) shows up twice, coherently — as a
 finding AND as an exact balance delta ($230.00) that the finding explains.
+
+## D-020 · 2026-08-09 · Coach tool use is schema-driven; totals are deterministic
+
+**Decision:** The coach's tool loop is schema-driven (each step the model emits a JSON
+decision: call a tool with arguments, or answer) rather than native function-calling. Query
+tools precompute totals; the response payload carries those computed totals separately, and
+the UI prints "Queried total: … across N transactions" under every answer regardless of the
+model's prose. Identical repeated calls are rejected with a corrective note, and a
+merchant+category query that matches nothing deterministically retries without the category
+filter (uncategorized rows shouldn't hide a merchant search).
+
+**Why:** All of this came from testing against real local models. The 3B repeated identical
+queries, gave up instead of widening filters, and twice misreported the tool's precomputed
+total in prose ($743.39, then $689.34, for a true $943.39). The 7B default answered
+correctly ($943.39, one tool call) — but the UI's deterministic total line means even a
+small model's prose slip can never show the user a wrong number unaccompanied by the right
+one. Math in code, language in the model, verification always visible.

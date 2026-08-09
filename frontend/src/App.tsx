@@ -5,6 +5,7 @@ import { PageHeader } from "./components/PageHeader";
 import { Shell } from "./components/Shell";
 import { Loading } from "./components/States";
 import { Accounts } from "./pages/Accounts";
+import { Coach } from "./pages/Coach";
 import { Dashboard } from "./pages/Dashboard";
 import { Documents } from "./pages/Documents";
 import { Reconciliation } from "./pages/Reconciliation";
@@ -43,7 +44,7 @@ function Gate() {
         <Route path="review" element={<Review />} />
         <Route path="reconciliation" element={<Reconciliation />} />
         <Route path="documents" element={<Documents />} />
-        <Route path="coach" element={<Placeholder title="Coach" milestone={11} />} />
+        <Route path="coach" element={<Coach />} />
         <Route path="budgets"
           element={<Placeholder title="Budgets & Simulator" milestone={12} />} />
         <Route path="settings" element={<Settings />} />

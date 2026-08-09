@@ -16,7 +16,7 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | 8 | Dashboard / Accounts / Transactions / Documents | Aug 9, 2026 | ~2 h | Live SSE update and upload→preview→import proven in a real browser session |
 | 9 | Local model + categorization + learning loop | Aug 9, 2026 | ~2.5 h | Installed real Ollama + qwen2.5:3b in the dev container; tuned prompts against the actual model |
 | 10 | Reconciliation engine + narration | Aug 9, 2026 | ~1.5 h | Full-pipeline test: 79 periods reconciled, 3 planted divergences found, zero false positives |
-| 11 | Coach + tool use | — | — | |
+| 11 | Coach + tool use | Aug 9, 2026 | ~2 h | Tested on both real models: 3B exposed 3 weaknesses (fixed deterministically); 7B default answers correctly |
 | 12 | Budgets + simulator | — | — | |
 | 13 | Hardening: errors, responsive, a11y | — | — | |
 | 14 | Packaging + launcher + zip | — | — | |
