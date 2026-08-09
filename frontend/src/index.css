@@ -1,8 +1,13 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* §13 design tokens — the source of truth for every color in the app. */
+/* §13 design tokens — the source of truth for every color in the app.
+   One accent, used sparingly. Ordinary spending is never red. */
 :root {
   --canvas: #fbfbfa;
   --surface: #ffffff;
@@ -28,18 +33,50 @@
   --rule: #26282c;
   --rule-strong: #3a3d42;
   --accent: #5fa891;
-  --accent-wash: #1b2622;
+  --accent-wash: #1c2a25;
   --positive: #5fa891;
   --negative: #ededea;
+  --attention: #c9744a;
+  --critical: #c05a50;
+}
+
+html {
+  background: var(--canvas);
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Inter Variable", Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Ledger figures: monospaced, digits align digit-for-digit. */
 .tabular {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Full keyboard navigation with visible focus (§13). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* Motion only in response to user action; none at all when reduced. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+::selection {
+  background: var(--accent-wash);
 }
