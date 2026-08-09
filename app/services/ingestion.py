@@ -175,7 +175,9 @@ class IngestionService:
                 source_document_id=doc.id,
             )
         for index, existing_id in result.merged.items():
-            await self.transactions.attach_document(user_id, existing_id, doc.id)
+            await self.transactions.attach_document(
+                user_id, existing_id, doc.id,
+                statement_date=parsed.transactions[index].posted_date)
 
         await self.documents.update_parse_result(
             user_id, document_id,

@@ -216,16 +216,23 @@ class TransactionRepository:
         return [self._map(r) for r in rows]
 
     async def attach_document(self, user_id: int, transaction_id: int,
-                              document_id: int) -> None:
-        """Record the statement source on a row that already exists from another source."""
+                              document_id: int,
+                              statement_date: dt.date | None = None) -> None:
+        """Record the statement source on a row that already exists from another
+        source. When the statement dated it differently (1-3 day shift), the
+        second date is preserved on transaction_date for reconciliation."""
         row = await self.session.scalar(
             select(Transaction).where(Transaction.user_id == user_id,
                                       Transaction.id == transaction_id))
         if row is not None and row.source_document_id is None:
             row.source_document_id = document_id
+            if statement_date and statement_date != row.posted_date \
+                    and row.transaction_date is None:
+                row.transaction_date = statement_date
 
     async def attach_external_id(self, user_id: int, transaction_id: int,
-                                 external_id: str, merchant: str | None = None) -> None:
+                                 external_id: str, merchant: str | None = None,
+                                 provider_date: dt.date | None = None) -> None:
         """Record the provider identity on a row that came from a statement."""
         row = await self.session.scalar(
             select(Transaction).where(Transaction.user_id == user_id,
@@ -234,6 +241,9 @@ class TransactionRepository:
             row.external_id = external_id
             if merchant and row.merchant is None:
                 row.merchant = merchant
+            if provider_date and provider_date != row.posted_date \
+                    and row.transaction_date is None:
+                row.transaction_date = provider_date
 
     async def existing_external_ids(self, user_id: int, account_id: int) -> set[str]:
         rows = await self.session.scalars(

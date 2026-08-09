@@ -17,14 +17,19 @@ async def client(tmp_path, monkeypatch):
     monkeypatch.setenv("MOCK_MIN_LATENCY", "0")
     monkeypatch.setenv("MOCK_MAX_LATENCY", "0")
     monkeypatch.setenv("MOCK_FAILURE_RATE", "0")
+    # Never talk to a real Ollama during tests — port 11399 is deliberately closed,
+    # so the degraded (template) path runs unless a test injects a fake provider.
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://127.0.0.1:11399")
 
     from app.core.config import get_settings
     from app.core import db as db_module
     from app.providers.financial import reset_provider_state
+    from app.providers.llm import reset_llm_provider
 
     get_settings.cache_clear()
     db_module.reset_db_state()
     reset_provider_state()
+    reset_llm_provider()
 
     from app.models import Base
 
@@ -52,6 +57,7 @@ async def client(tmp_path, monkeypatch):
     get_settings.cache_clear()
     db_module.reset_db_state()
     reset_provider_state()
+    reset_llm_provider()
 
 
 @pytest.fixture

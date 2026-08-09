@@ -59,6 +59,9 @@ class DashboardService:
 
         recent = await self.transactions.list(user_id, limit=10)
         review_count = await self.analytics.review_count(user_id)
+        from app.repositories.reconciliation import ReconciliationRepository
+
+        unresolved = await ReconciliationRepository(self.session).unresolved_count(user_id)
 
         return {
             "as_of": today.isoformat(),
@@ -71,7 +74,7 @@ class DashboardService:
             "last_month": {"label": prev_start.strftime("%B %Y"), **prev_month},
             "needs_attention": {
                 "review_count": review_count,
-                "unresolved_findings": 0,   # reconciliation lands in milestone 10
+                "unresolved_findings": unresolved,
             },
             "recent": [asdict(t) for t in recent],
         }

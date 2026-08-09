@@ -206,7 +206,8 @@ class SyncService:
         for index, existing_id in result.merged.items():
             t = fresh[index]
             await self.transactions.attach_external_id(
-                user_id, existing_id, t.external_id, merchant=t.merchant)
+                user_id, existing_id, t.external_id, merchant=t.merchant,
+                provider_date=t.date)
         inserted = 0
         for index in result.to_insert:
             t = fresh[index]

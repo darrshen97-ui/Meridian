@@ -12,6 +12,7 @@ from app.routers import ai as ai_router
 from app.routers import auth as auth_router
 from app.routers import documents as documents_router
 from app.routers import ledger as ledger_router
+from app.routers import reconciliation as reconciliation_router
 from app.routers import sync as sync_router
 from app.services.auth import AuthError
 
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(documents_router.router)
     app.include_router(sync_router.router)
     app.include_router(ai_router.router)
+    app.include_router(reconciliation_router.router)
     documents_router.register_exception_handler(app)
     sync_router.register_exception_handler(app)
     ledger_router.register_exception_handler(app)

@@ -207,3 +207,17 @@ first-use speed test.
 calibrated behavior on it (ambiguous → review, clear merchants → auto-file), the 7B only
 improves from there. Observed on real hardware: ~35-55 s per 15-transaction batch on CPU,
 28/63 auto-applied, 35/63 correctly held for review, zero hallucinated categories accepted.
+
+## D-019 · 2026-08-09 · Reconciliation identities and balance anchoring
+
+**Decision:** Because statement and provider rows collapse into single rows at import/sync
+(D-011/D-012), the engine classifies by identity: statement-identity-only → missing in
+provider; provider-identity-only → missing in statement; both identities with dates 1–3 days
+apart (second date preserved on `transaction_date` at merge time) → pre-resolved date-shift.
+The computed period-ending balance anchors on the latest provider balance snapshot and walks
+the ledger backwards, rather than requiring a stored opening balance.
+
+**Why:** The collapsed-ledger design makes matching a one-time event instead of a per-run
+recomputation, and the anchor approach needs no schema addition. A useful property falls out:
+a statement-only transaction (the planted CHECK #1042) shows up twice, coherently — as a
+finding AND as an exact balance delta ($230.00) that the finding explains.

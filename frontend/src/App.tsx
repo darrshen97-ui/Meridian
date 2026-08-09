@@ -7,6 +7,7 @@ import { Loading } from "./components/States";
 import { Accounts } from "./pages/Accounts";
 import { Dashboard } from "./pages/Dashboard";
 import { Documents } from "./pages/Documents";
+import { Reconciliation } from "./pages/Reconciliation";
 import { Review } from "./pages/Review";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
@@ -40,8 +41,7 @@ function Gate() {
         <Route path="accounts" element={<Accounts />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="review" element={<Review />} />
-        <Route path="reconciliation"
-          element={<Placeholder title="Reconciliation" milestone={10} />} />
+        <Route path="reconciliation" element={<Reconciliation />} />
         <Route path="documents" element={<Documents />} />
         <Route path="coach" element={<Placeholder title="Coach" milestone={11} />} />
         <Route path="budgets"
