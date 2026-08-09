@@ -168,3 +168,16 @@ account reports `ok` with a `balance_error` note instead of `failed`.
 
 **Why:** The rows are already durably ingested at that point; reporting the account as failed
 both lied about the ledger and (before the fix) dropped the ingested rows from the summary.
+
+## D-016 · 2026-08-09 · "Known upcoming obligations" = current credit-card balances
+
+**Decision:** Spending power = latest balances of open liquid accounts (checking, savings,
+payment apps) minus current credit-card balances owed. Investments, crypto, and closed
+accounts are excluded from the liquid side; loans are excluded from obligations (their
+monthly payment is a budget concern, not a balance).
+
+**Why:** §2 defines spending power as liquid capital "minus known upcoming obligations"
+without defining the obligations. Card balances are the one deterministic, always-known
+obligation the data actually contains. Predicting upcoming bills from recurrence detection
+would be a guess — Iteration 2 material. The dashboard states the formula in plain language
+under the number so it's never mysterious.

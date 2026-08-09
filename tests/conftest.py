@@ -32,6 +32,12 @@ async def client(tmp_path, monkeypatch):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # Alembic migration 0003 seeds these in real databases; tests use create_all.
+    from app.services.categories import ensure_system_categories
+
+    async with db_module.get_session_factory()() as seed_session:
+        await ensure_system_categories(seed_session)
+
     from httpx import ASGITransport, AsyncClient
 
     from app.main import create_app

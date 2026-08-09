@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(sync_router.router)
     documents_router.register_exception_handler(app)
     sync_router.register_exception_handler(app)
+    ledger_router.register_exception_handler(app)
 
     # Prebuilt frontend, when present. In development the Vite dev server proxies /api.
     index_file = STATIC_DIR / "index.html"

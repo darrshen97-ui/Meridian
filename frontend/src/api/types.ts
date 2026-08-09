@@ -39,6 +39,7 @@ export interface Transaction {
   pending: boolean;
   source: string;
   source_document_id: number | null;
+  external_id: string | null;
   category_id: number | null;
   category_confidence: number | null;
   category_source: string | null;

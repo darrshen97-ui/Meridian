@@ -18,7 +18,15 @@ from app.domain.models import (
     InstitutionInfo,
     TransactionInfo,
 )
-from app.models import Account, Budget, Category, Document, Institution, Transaction
+from app.models import (
+    Account,
+    Budget,
+    Category,
+    Document,
+    Institution,
+    Transaction,
+    UserCorrection,
+)
 
 
 class InstitutionRepository:
@@ -125,6 +133,8 @@ class TransactionRepository:
 
     async def list(self, user_id: int, *, account_id: int | None = None,
                    date_from: dt.date | None = None, date_to: dt.date | None = None,
+                   q: str | None = None, category_id: int | None = None,
+                   source: str | None = None, uncategorized: bool = False,
                    limit: int = 200, offset: int = 0) -> list[TransactionInfo]:
         stmt = select(Transaction).where(Transaction.user_id == user_id)
         if account_id is not None:
@@ -133,10 +143,43 @@ class TransactionRepository:
             stmt = stmt.where(Transaction.posted_date >= date_from)
         if date_to is not None:
             stmt = stmt.where(Transaction.posted_date <= date_to)
+        if q:
+            needle = f"%{q.strip()}%"
+            stmt = stmt.where(Transaction.description_raw.ilike(needle)
+                              | Transaction.merchant.ilike(needle))
+        if category_id is not None:
+            stmt = stmt.where(Transaction.category_id == category_id)
+        if uncategorized:
+            stmt = stmt.where(Transaction.category_id.is_(None))
+        if source == "both":
+            stmt = stmt.where(Transaction.external_id.is_not(None),
+                              Transaction.source_document_id.is_not(None))
+        elif source == "statement":
+            stmt = stmt.where(Transaction.source_document_id.is_not(None))
+        elif source == "provider":
+            stmt = stmt.where(Transaction.external_id.is_not(None))
         stmt = stmt.order_by(Transaction.posted_date.desc(), Transaction.id.desc())
         stmt = stmt.limit(limit).offset(offset)
         rows = await self.session.scalars(stmt)
         return [self._map(r) for r in rows]
+
+    async def set_category(self, user_id: int, transaction_id: int, *,
+                           category_id: int | None, source: str,
+                           confidence: float | None,
+                           mark_reviewed: bool) -> TransactionInfo | None:
+        row = await self.session.scalar(
+            select(Transaction).where(Transaction.user_id == user_id,
+                                      Transaction.id == transaction_id))
+        if row is None:
+            return None
+        row.category_id = category_id
+        row.category_source = source
+        row.category_confidence = confidence
+        if mark_reviewed:
+            from app.models.base import utcnow
+
+            row.reviewed_at = utcnow()
+        return self._map(row)
 
     async def create(self, user_id: int, *, account_id: int, posted_date: dt.date,
                      description_raw: str, amount_minor: int, type: str, source: str,
@@ -208,6 +251,7 @@ class TransactionRepository:
             description_clean=r.description_clean, merchant=r.merchant,
             amount_minor=r.amount_minor, currency=r.currency, type=r.type,
             pending=r.pending, source=r.source, source_document_id=r.source_document_id,
+            external_id=r.external_id,
             category_id=r.category_id, category_confidence=r.category_confidence,
             category_source=r.category_source, reviewed_at=r.reviewed_at,
         )
@@ -235,6 +279,36 @@ class CategoryRepository:
         self.session.add(row)
         await self.session.flush()
         return row.id
+
+    async def get_visible(self, user_id: int, category_id: int) -> CategoryInfo | None:
+        """A category this user may assign: their own or a system one."""
+        row = await self.session.scalar(
+            select(Category).where(
+                Category.id == category_id,
+                or_(Category.user_id == user_id, Category.user_id.is_(None))))
+        if row is None:
+            return None
+        return CategoryInfo(id=row.id, name=row.name, parent_id=row.parent_id,
+                            is_system=row.is_system)
+
+
+class UserCorrectionRepository:
+    """Tier-1 learning memory: every override becomes a merchant-pattern rule."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def add(self, user_id: int, *, merchant_pattern: str,
+                  category_id: int) -> None:
+        self.session.add(UserCorrection(user_id=user_id,
+                                        merchant_pattern=merchant_pattern,
+                                        category_id=category_id))
+
+    async def list(self, user_id: int) -> list[UserCorrection]:
+        rows = await self.session.scalars(
+            select(UserCorrection).where(UserCorrection.user_id == user_id)
+            .order_by(UserCorrection.created_at.desc(), UserCorrection.id.desc()))
+        return list(rows)
 
 
 class DocumentListRepository:

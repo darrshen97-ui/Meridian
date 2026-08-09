@@ -65,6 +65,7 @@ class TransactionInfo:
     pending: bool
     source: str
     source_document_id: int | None
+    external_id: str | None
     category_id: int | None
     category_confidence: float | None
     category_source: str | None
