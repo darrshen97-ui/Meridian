@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import APP_VERSION, get_settings
 from app.routers import auth as auth_router
+from app.routers import documents as documents_router
 from app.routers import ledger as ledger_router
 from app.services.auth import AuthError
 
@@ -29,6 +30,8 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router.router)
     app.include_router(ledger_router.router)
+    app.include_router(documents_router.router)
+    documents_router.register_exception_handler(app)
 
     # Prebuilt frontend, when present. In development the Vite dev server proxies /api.
     index_file = STATIC_DIR / "index.html"

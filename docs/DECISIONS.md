@@ -118,3 +118,25 @@ than the `••4417` style used in UI copy.
 **Why:** The `•` glyph doesn't survive PDF text extraction cleanly (`(cid:127)` artifacts in
 pdfplumber), which would sabotage parser account-matching — and real statements use
 ASCII masking anyway. The UI keeps the typographic `••` form.
+
+## D-011 · 2026-08-09 · Dual-source transactions: convention over schema change
+
+**Decision:** When statement and provider data describe the same transaction, the row keeps
+its original `source` value and records the second origin through its other columns: a row
+with both `external_id` (provider identity) and `source_document_id` (statement identity) is
+dual-sourced. No schema change.
+
+**Why:** The brief requires "one row with both sources recorded" but gives `source` a single
+value. The two identity columns already encode provenance precisely; the UI derives the
+statement/provider/both indicator from them.
+
+## D-012 · 2026-08-09 · Import-time dedupe reuses the reconciliation matcher
+
+**Decision:** `app/services/dedupe.py` implements the two-layer matcher (exact
+occurrence-aware hash, then amount-exact ±3-day one-to-one fuzzy assignment) and statement
+import runs it against the account's existing rows. The reconciliation engine (milestone 10)
+consumes the same module.
+
+**Why:** One matching algorithm, one place, tested once — and importing a PDF after an OFX
+(or after provider sync) can never double-book a transaction. OFX truncates descriptions to
+32 chars, so the fuzzy layer is genuinely needed, not speculative.

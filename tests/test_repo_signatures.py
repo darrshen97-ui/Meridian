@@ -9,11 +9,13 @@ from __future__ import annotations
 import inspect
 
 import app.repositories.audit
+import app.repositories.documents
 import app.repositories.ledger
 import app.repositories.users
 
 EXEMPT_CLASSES = {"UserRepository"}
-MODULES = [app.repositories.ledger, app.repositories.audit, app.repositories.users]
+MODULES = [app.repositories.ledger, app.repositories.audit, app.repositories.users,
+           app.repositories.documents]
 
 
 def _repository_classes():

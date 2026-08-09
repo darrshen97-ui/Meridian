@@ -10,7 +10,7 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | 2 | Data model + Alembic | Aug 9, 2026 | ~40 min | All 14 tables; up/down/up verified; schema-vs-models drift test added |
 | 3 | Auth + profiles + isolation test | Aug 9, 2026 | ~50 min | Isolation proven both directions (owner sees data, other profile sees zero) |
 | 4 | Mock data generator + documents | Aug 9, 2026 | ~2 h | Largest milestone so far; determinism verified by manifest diff across two runs |
-| 5 | Statement parsers + ingestion | — | — | |
+| 5 | Statement parsers + ingestion | Aug 9, 2026 | ~1.5 h | All 117 sample documents parse and cross-check against the ledger exactly |
 | 6 | Provider layer + sync + SSE | — | — | |
 | 7 | Design system + shell | — | — | |
 | 8 | Dashboard / Accounts / Transactions / Documents | — | — | |

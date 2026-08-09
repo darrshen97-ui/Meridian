@@ -112,6 +112,37 @@ class TransactionRepository:
         await self.session.flush()
         return row.id
 
+    async def list_for_matching(self, user_id: int, *, account_id: int,
+                                date_from: dt.date, date_to: dt.date) -> list[Transaction]:
+        """ORM rows for the dedupe matcher (internal to services; not for routers)."""
+        rows = await self.session.scalars(
+            select(Transaction).where(
+                Transaction.user_id == user_id,
+                Transaction.account_id == account_id,
+                Transaction.posted_date >= date_from,
+                Transaction.posted_date <= date_to,
+            )
+        )
+        return list(rows)
+
+    async def list_by_document(self, user_id: int, document_id: int) -> list[TransactionInfo]:
+        rows = await self.session.scalars(
+            select(Transaction).where(
+                Transaction.user_id == user_id,
+                Transaction.source_document_id == document_id,
+            ).order_by(Transaction.posted_date, Transaction.id)
+        )
+        return [self._map(r) for r in rows]
+
+    async def attach_document(self, user_id: int, transaction_id: int,
+                              document_id: int) -> None:
+        """Record the statement source on a row that already exists from another source."""
+        row = await self.session.scalar(
+            select(Transaction).where(Transaction.user_id == user_id,
+                                      Transaction.id == transaction_id))
+        if row is not None and row.source_document_id is None:
+            row.source_document_id = document_id
+
     @staticmethod
     def _map(r: Transaction) -> TransactionInfo:
         return TransactionInfo(
@@ -149,7 +180,7 @@ class CategoryRepository:
         return row.id
 
 
-class DocumentRepository:
+class DocumentListRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 

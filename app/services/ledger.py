@@ -17,7 +17,7 @@ from app.repositories.ledger import (
     AccountRepository,
     BudgetRepository,
     CategoryRepository,
-    DocumentRepository,
+    DocumentListRepository,
     InstitutionRepository,
     TransactionRepository,
 )
@@ -30,7 +30,7 @@ class LedgerService:
         self.accounts = AccountRepository(session)
         self.transactions = TransactionRepository(session)
         self.categories = CategoryRepository(session)
-        self.documents = DocumentRepository(session)
+        self.documents = DocumentListRepository(session)
         self.budgets = BudgetRepository(session)
 
     async def list_institutions(self, user_id: int) -> list[InstitutionInfo]:
