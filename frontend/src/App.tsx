@@ -1,10 +1,9 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth";
-import { NotBuilt } from "./components/NotBuilt";
-import { PageHeader } from "./components/PageHeader";
 import { Shell } from "./components/Shell";
 import { Loading } from "./components/States";
 import { Accounts } from "./pages/Accounts";
+import { Budgets } from "./pages/Budgets";
 import { Coach } from "./pages/Coach";
 import { Dashboard } from "./pages/Dashboard";
 import { Documents } from "./pages/Documents";
@@ -13,17 +12,6 @@ import { Review } from "./pages/Review";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
 import { Welcome } from "./pages/Welcome";
-
-// Placeholder pages are honest about being unbuilt (non-negotiable #6);
-// each is replaced by its milestone.
-function Placeholder({ title, milestone }: { title: string; milestone: number }) {
-  return (
-    <>
-      <PageHeader title={title} />
-      <NotBuilt feature={title} milestone={milestone} />
-    </>
-  );
-}
 
 function Gate() {
   const { me, loading } = useAuth();
@@ -45,8 +33,7 @@ function Gate() {
         <Route path="reconciliation" element={<Reconciliation />} />
         <Route path="documents" element={<Documents />} />
         <Route path="coach" element={<Coach />} />
-        <Route path="budgets"
-          element={<Placeholder title="Budgets & Simulator" milestone={12} />} />
+        <Route path="budgets" element={<Budgets />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

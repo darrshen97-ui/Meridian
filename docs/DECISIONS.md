@@ -238,3 +238,15 @@ total in prose ($743.39, then $689.34, for a true $943.39). The 7B default answe
 correctly ($943.39, one tool call) — but the UI's deterministic total line means even a
 small model's prose slip can never show the user a wrong number unaccompanied by the right
 one. Math in code, language in the model, verification always visible.
+
+## D-021 · 2026-08-10 · Every figure the model may mention is precomputed
+
+**Decision:** Wherever a model explains numeric results (coach, reconciliation narration,
+simulation), the facts handed to it include every derived figure it could plausibly want —
+monthly deltas AND their cumulative totals — with an explicit "do not compute any other
+figures" instruction. The deterministic summary and tables always carry the true numbers
+regardless.
+
+**Why:** Observed twice on real models: given a monthly figure and a horizon, even the 7B
+multiplied wrong in prose ($296.70 for a true $386.70). If a figure isn't handed over, a
+model will derive it — so the fix is to leave it nothing to derive.

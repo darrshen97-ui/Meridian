@@ -352,3 +352,31 @@ class BudgetRepository:
             )
             for r in rows
         ]
+
+    async def upsert_monthly(self, user_id: int, *, category_id: int,
+                             target_minor: int, period_start: dt.date) -> BudgetInfo:
+        row = await self.session.scalar(
+            select(Budget).where(Budget.user_id == user_id,
+                                 Budget.category_id == category_id,
+                                 Budget.period_type == "monthly"))
+        if row is None:
+            row = Budget(user_id=user_id, category_id=category_id,
+                         period_type="monthly", period_start=period_start,
+                         target_minor=target_minor)
+            self.session.add(row)
+            await self.session.flush()
+        else:
+            row.target_minor = target_minor
+        return BudgetInfo(id=row.id, category_id=row.category_id,
+                          period_type=row.period_type, period_start=row.period_start,
+                          target_minor=row.target_minor)
+
+    async def delete_monthly(self, user_id: int, category_id: int) -> bool:
+        row = await self.session.scalar(
+            select(Budget).where(Budget.user_id == user_id,
+                                 Budget.category_id == category_id,
+                                 Budget.period_type == "monthly"))
+        if row is None:
+            return False
+        await self.session.delete(row)
+        return True
