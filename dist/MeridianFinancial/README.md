@@ -23,6 +23,12 @@ real error handling, and a ledger-like interface designed for daily use.
 
 **Prerequisite:** [Python 3.11+](https://www.python.org/downloads/). That's the only one.
 
+**Get it:** download
+[`dist/MeridianFinancial-v0.1.zip`](https://github.com/darrshen97-ui/Meridian/raw/main/dist/MeridianFinancial-v0.1.zip)
+(the packaged release — smallest and cleanest), or download this repository as a ZIP;
+both contain the prebuilt interface and run the same way. Extract it first — launchers do
+not work from inside a compressed folder.
+
 | Your computer | Do this |
 |---|---|
 | Windows | Double-click **`Start Meridian.bat`** |
@@ -143,7 +149,8 @@ The repository (as opposed to the zip) also carries `frontend/` (React + Vite +
 TypeScript; `npm run build` outputs into `app/static`), the deterministic dataset
 generator (`scripts/generate_mock_data.py`), 154 pytest + 13 vitest tests
 (`.venv/bin/python -m pytest`, `cd frontend && npm test`), and the build script
-(`python scripts/build_zip.py` → `dist/MeridianFinancial-v0.1.zip`). Project
+(`python scripts/build_zip.py` → `dist/MeridianFinancial-v0.1.zip`) and the deliverable
+generator (`node scripts/build_deliverables.mjs` → `docs/deliverables/*.docx`). Project
 documentation lives in `docs/` — the build plan (`BUILD_PLAN.md`), decision log
 (`DECISIONS.md`, 23 entries), prompt and time logs, the development report
 (`DEV_REPORT.md`), and the screenshot guide (`SCREENSHOT_GUIDE.md`).

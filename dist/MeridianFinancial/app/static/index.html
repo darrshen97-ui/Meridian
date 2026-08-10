@@ -4,10 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meridian</title>
-    <script type="module" crossorigin src="/assets/index-wYbbFEXh.js"></script>
+    <script type="module" crossorigin src="/assets/index-CZQy3gCN.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-B-pIrnRv.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Replaced by React on mount. If it stays on screen, the interface
+           script never executed — say so instead of showing a blank page. -->
+      <div id="boot-fallback" style="font:15px/1.6 system-ui,sans-serif;color:#16181D;
+           max-width:600px;margin:80px auto;padding:0 24px">
+        <h1 style="font-size:24px;font-weight:600;margin:0 0 8px">Meridian didn't finish loading.</h1>
+        <p style="color:#6E7178;margin:0 0 16px">The server is running, but the
+        browser did not run the interface script.</p>
+        <p style="color:#6E7178;margin:0 0 16px">Try a hard refresh
+        (<b>Ctrl&nbsp;+&nbsp;Shift&nbsp;+&nbsp;R</b>) first. If this message stays,
+        open <code>http://127.0.0.1:8787/health</code> — if
+        <code>js_content_type</code> is not <code>text/javascript</code>, this
+        machine is mislabelling JavaScript files and Meridian needs the newer
+        build that overrides it.</p>
+      </div>
+    </div>
   </body>
 </html>

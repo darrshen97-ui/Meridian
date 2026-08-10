@@ -5,9 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  AlignmentType, BorderStyle, Document, Footer, HeadingLevel, LevelFormat,
-  Packer, PageBreak, PageOrientation, Paragraph, ShadingType, Table, TableCell,
-  TableRow, TextRun, WidthType,
+  AlignmentType, BorderStyle, Document, Footer, HeadingLevel, ImageRun,
+  LevelFormat, Packer, PageBreak, PageOrientation, Paragraph, ShadingType,
+  Table, TableCell, TableRow, TextRun, WidthType,
 } from "docx";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -135,6 +135,40 @@ function screenshotBox(caption, instructions) {
   ];
 }
 
+// A real, embedded screenshot with a numbered caption.
+const SHOTS = path.join(ROOT, "docs", "screenshots", "dev");
+let figureNumber = 0;
+
+function pngSize(file) {
+  const head = fs.readFileSync(file).subarray(16, 24);
+  return { w: head.readUInt32BE(0), h: head.readUInt32BE(4) };
+}
+
+function figure(fileName, caption, { maxWidth = 540 } = {}) {
+  const file = path.join(SHOTS, fileName);
+  const { w, h } = pngSize(file);
+  const width = Math.min(maxWidth, w);
+  const height = Math.round(width * (h / w));
+  figureNumber += 1;
+  return [
+    new Paragraph({
+      spacing: { before: 160, after: 60 },
+      alignment: AlignmentType.CENTER,
+      children: [new ImageRun({
+        type: "png",
+        data: fs.readFileSync(file),
+        transformation: { width, height },
+      })],
+    }),
+    new Paragraph({
+      spacing: { after: 220 },
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: `Figure ${figureNumber}. ${caption}`,
+                               size: 17, italics: true, color: "6E7178" })],
+    }),
+  ];
+}
+
 const footer = (label) => new Footer({
   children: [new Paragraph({
     alignment: AlignmentType.RIGHT,
@@ -236,26 +270,52 @@ const report = new Document({
 
       new Paragraph({ children: [new PageBreak()] }),
 
-      h1("9. Required screenshots"),
-      p("Both screenshots below must show the system date and time. On Windows, click the taskbar clock so the date flyout is open, then capture the full screen with Windows + PrtScn (not a region snip, so the clock is included)."),
+      h1("9. The application"),
+      p("The screenshots in this section are of the finished application running against the generated demo dataset. They are included as evidence that each feature is real rather than described."),
+
+      ...figure("welcome-light.png",
+        "Profile selection on first launch. Each profile's data is completely isolated."),
+      ...figure("m8-dashboard-live.png",
+        "The dashboard. Spending power is liquid capital minus card balances due, with the formula stated in plain language; the status line under “Sync now” updates live over Server-Sent Events."),
+      ...figure("m8-transactions.png",
+        "The transaction ledger: search, filters, source indicator (statement / live / both), and inline category editing. Hairline rules and aligned monospaced figures are the design's structural identity."),
+      ...figure("m8-doc-preview.png",
+        "Statement ingestion. A parsed PDF shows exactly what will be imported before anything is written; importing this November statement reported “Imported 1 transaction, merged 25 with existing rows” — the single new row being a cheque that never appeared in the live feed."),
+      ...figure("m9-review.png",
+        "The review queue. Cryptic payment-processor descriptors arrive with a low-confidence suggestion rather than being silently guessed; one keystroke accepts, and Shift+A applies the decision to every matching merchant."),
+      ...figure("m10-reconciliation.png",
+        "Reconciliation for one account and period: the statement's ending balance against the balance computed from the live ledger, with each finding narrated in one plain sentence and resolvable."),
+      ...figure("m11-coach.png",
+        "The AI spending coach. The answer is produced by a local model that had to query the ledger first, and the interface prints the tool-computed total and every transaction the answer drew on."),
+      ...figure("m12-budgets.png",
+        "Budgets and the what-if simulator. The projection is deterministic arithmetic over the real historical distribution; the model contributes only the explanation and the second-order warning beneath it."),
+      ...figure("shell-dark.png",
+        "The same interface in dark appearance, which follows the operating system by default."),
+      ...figure("m13-375-transactions.png",
+        "The ledger at 375 pixels wide — verified free of horizontal overflow.", { maxWidth: 260 }),
+
+      new Paragraph({ children: [new PageBreak()] }),
+
+      h1("10. Required assignment screenshots"),
+      p("The two screenshots below must be captured on the submitting machine, because each has to show that machine's own system date and time. On Windows, click the taskbar clock so the date flyout is open, then capture the whole screen with Windows + PrtScn — not a region snip, so the clock is included. Paste each image into the box beneath its heading."),
 
       new Paragraph({
-        spacing: { before: 160, after: 100 },
+        spacing: { before: 200, after: 100 },
         children: [new TextRun({ text: "Screenshot 1 — the completed project code in the IDE",
                                  size: 22, bold: true })],
       }),
       ...screenshotBox(
-        "Figure 1. The Meridian project open in the IDE, with the system date and time visible.",
-        "Have on screen: the meridian project open with the file explorer visible (app, frontend, alembic, scripts, sample_data, tests, docs), a substantial file open such as app/services/reconciliation.py, and the taskbar clock flyout showing today's date."),
+        "The Meridian project open in the IDE, with the system date and time visible.",
+        "On screen: the project open with the file explorer showing app, frontend, alembic, scripts, sample_data, tests and docs; a substantial file open such as app/services/reconciliation.py; and the taskbar clock flyout showing today's date."),
 
       new Paragraph({
-        spacing: { before: 160, after: 100 },
+        spacing: { before: 200, after: 100 },
         children: [new TextRun({ text: "Screenshot 2 — the application running on localhost",
                                  size: 22, bold: true })],
       }),
       ...screenshotBox(
-        "Figure 2. Meridian running at http://127.0.0.1:8787, with the system date and time visible.",
-        "Have on screen: the browser at http://127.0.0.1:8787 with the URL bar visible, signed in as Jordan Reyes, on the Dashboard so spending power, accounts, and recent activity all show real data — and the taskbar clock flyout showing today's date."),
+        "Meridian running at http://127.0.0.1:8787, with the system date and time visible.",
+        "On screen: the browser at http://127.0.0.1:8787 with the URL bar visible, signed in as Jordan Reyes, on the Dashboard so spending power, accounts and recent activity all show real data — and the taskbar clock flyout showing today's date. Figure 2 above shows the screen you are aiming for."),
     ],
   }],
 });

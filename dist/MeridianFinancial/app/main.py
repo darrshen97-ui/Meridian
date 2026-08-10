@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -23,6 +24,53 @@ from app.services.auth import AuthError
 STATIC_DIR = Path(__file__).parent / "static"
 
 log = logging.getLogger("meridian")
+
+# Python's mimetypes reads the Windows registry, where .js is frequently mapped to
+# text/plain by other software. Browsers apply strict MIME checking to ES modules,
+# so a mis-typed bundle is silently refused and the page renders blank. Registering
+# the correct types here overrides whatever the machine claims (D-025).
+CONTENT_TYPES = {
+    ".js": "text/javascript",
+    ".mjs": "text/javascript",
+    ".css": "text/css",
+    ".json": "application/json",
+    ".svg": "image/svg+xml",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".html": "text/html",
+}
+for _suffix, _type in CONTENT_TYPES.items():
+    mimetypes.add_type(_type, _suffix)
+
+
+TEXTUAL = {".js", ".mjs", ".css", ".json", ".html", ".svg"}
+
+
+def content_type_for(suffix: str) -> str | None:
+    """Our own answer, independent of whatever the machine's MIME registry says."""
+    declared = CONTENT_TYPES.get(suffix.lower())
+    if declared is None:
+        return None
+    return f"{declared}; charset=utf-8" if suffix.lower() in TEXTUAL else declared
+
+
+class TypedStaticFiles(StaticFiles):
+    """StaticFiles that trusts our table instead of the host's MIME registry.
+
+    Starlette re-guesses the content type on every request, so registering types
+    at import time is not enough on a machine that mislabels JavaScript.
+    """
+
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        response = super().file_response(full_path, stat_result, scope, status_code)
+        declared = content_type_for(Path(full_path).suffix)
+        if declared:
+            response.headers["content-type"] = declared
+        return response
+
+
+def index_file_exists() -> bool:
+    return (STATIC_DIR / "index.html").exists()
 
 MISSING_UI_PAGE = """<!doctype html>
 <meta charset="utf-8"><title>Meridian — interface not built</title>
@@ -85,7 +133,13 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health():
-        return {"status": "ok", "app": "meridian", "version": APP_VERSION}
+        return {
+            "status": "ok", "app": "meridian", "version": APP_VERSION,
+            "ui_built": index_file_exists(),
+            # Diagnostic: a value other than text/javascript means this machine's
+            # MIME registry would have blocked the interface (see CONTENT_TYPES).
+            "js_content_type": mimetypes.guess_type("bundle.js")[0],
+        }
 
     app.include_router(auth_router.router)
     app.include_router(ledger_router.router)
@@ -103,7 +157,8 @@ def create_app() -> FastAPI:
     # Prebuilt frontend, when present. In development the Vite dev server proxies /api.
     index_file = STATIC_DIR / "index.html"
     if index_file.exists():
-        app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+        app.mount("/assets", TypedStaticFiles(directory=STATIC_DIR / "assets"),
+                  name="assets")
 
         @app.get("/{path:path}", include_in_schema=False)
         async def spa(path: str):
@@ -113,8 +168,9 @@ def create_app() -> FastAPI:
                                     content={"detail": "No such API endpoint."})
             candidate = (STATIC_DIR / path).resolve()
             if path and candidate.is_file() and candidate.is_relative_to(STATIC_DIR.resolve()):
-                return FileResponse(candidate)
-            return FileResponse(index_file)
+                return FileResponse(candidate,
+                                    media_type=content_type_for(candidate.suffix))
+            return FileResponse(index_file, media_type="text/html; charset=utf-8")
     else:
         # The API is up but the interface wasn't built into this copy. Say so in
         # the browser with the fix, instead of a bare 404 (non-negotiable #6).

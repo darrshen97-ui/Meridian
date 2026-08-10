@@ -6,6 +6,9 @@ import { initTheme } from "./theme";
 
 initTheme();
 
+// The script ran, so the "didn't finish loading" notice is no longer true.
+document.getElementById("boot-fallback")?.remove();
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

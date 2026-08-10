@@ -48,3 +48,35 @@ async def test_unhandled_errors_do_not_leak_internals(client, monkeypatch):
     body = resp.json()
     assert "secret internal detail" not in str(body)
     assert "server log" in body["detail"]
+
+
+async def test_js_bundle_is_served_as_javascript_not_text(client, monkeypatch):
+    """A machine that maps .js to text/plain (common on Windows, via the registry)
+    must not be able to make the browser refuse our ES module bundle — which
+    renders a blank page with no visible error.
+    """
+    import mimetypes
+    from pathlib import Path
+
+    import app.main as main
+
+    bundles = sorted((main.STATIC_DIR / "assets").glob("*.js"))
+    if not bundles:
+        import pytest
+
+        pytest.skip("frontend not built in this checkout")
+
+    # Poison the machine's MIME map the way a bad registry entry does...
+    monkeypatch.setitem(mimetypes.types_map, ".js", "text/plain")
+    assert mimetypes.guess_type("x.js")[0] == "text/plain"
+
+    # ...the served asset must still carry a JavaScript content type.
+    asset: Path = bundles[0]
+    resp = await client.get(f"/assets/{asset.name}")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/javascript"), \
+        resp.headers["content-type"]
+
+    # index.html must be HTML, and the health probe reports the effective type.
+    assert (await client.get("/")).headers["content-type"].startswith("text/html")
+    assert main.CONTENT_TYPES[".js"] == "text/javascript"
