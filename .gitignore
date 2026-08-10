@@ -16,3 +16,6 @@ frontend/node_modules/
 # build-time dependency only, so downloading this repository must yield a working
 # app. See docs/DECISIONS.md D-023.
 frontend/tsconfig.tsbuildinfo
+
+# Node (build-time only)
+node_modules/

@@ -271,3 +271,29 @@ total. Verified over HTTP: profile list, login, populated dashboard, degraded AI
 with the enable hint, SPA served. Relaunch reused the venv and was up in seconds. The
 browser step was skipped via MERIDIAN_NO_BROWSER (headless test container); on a desktop it
 opens Chrome/Edge in app mode or any browser as a tab.
+
+## D-023 · 2026-08-10 · The built frontend and the release zip are committed
+
+**Decision:** `app/static` (the prebuilt React bundle) and `dist/MeridianFinancial-v0.1.zip`
+are tracked in git rather than ignored as build output. When the interface is genuinely
+absent, the server returns an explanatory 503 page naming both fixes instead of a bare
+JSON 404.
+
+**Why:** Found by the user, not by a test. Downloading the repository as a ZIP produced a
+copy with an empty `app/static`; the launcher ran perfectly and the browser showed
+`{"detail":"Not Found"}`. Meridian is distributed as a runnable artifact and Node is a
+build-time dependency only (§15), so *any* way of obtaining this project must yield a
+working app. The clean-machine test used the packaged zip and therefore never exercised
+the source-download path — a gap in the test, not just in the ignore file. Verified after
+the fix by reproducing GitHub's ZIP download with `git archive` and launching from it.
+
+## D-024 · 2026-08-10 · Submission deliverables are generated as Word documents
+
+**Decision:** `scripts/build_deliverables.mjs` generates
+`docs/deliverables/Meridian_Development_Report.docx` and `Meridian_Prompt_Log.docx` from
+the living Markdown logs. The report carries bordered placeholders for the two required
+screenshots.
+
+**Why:** The graded deliverables need embedded screenshots with a visible system clock,
+which Markdown in a repository cannot hold. The Markdown files remain the working source
+of truth; the Word documents are generated from them so the two cannot drift.
