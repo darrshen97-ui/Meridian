@@ -11,10 +11,8 @@ data/
 # Node (frontend build-time only)
 frontend/node_modules/
 
-# Built frontend assets are produced by the packaging step
-app/static/*
-!app/static/.gitkeep
-
-# Packaging output
-dist/
+# NOTE: app/static (the prebuilt React bundle) and dist/ (the shippable zip) are
+# deliberately COMMITTED. Meridian is distributed as a runnable artifact: Node is a
+# build-time dependency only, so downloading this repository must yield a working
+# app. See docs/DECISIONS.md D-023.
 frontend/tsconfig.tsbuildinfo

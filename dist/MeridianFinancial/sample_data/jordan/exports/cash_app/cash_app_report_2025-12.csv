@@ -1,0 +1,9 @@
+Transaction ID,Date,Transaction Type,Currency,Amount,Fee,Net Amount,Notes,Name of sender/receiver,Account
+ca-202512-00001,2025-12-03 10:11:14 EDT,Cash App Pay,USD,-11.63,0,-11.63,,Vinyl Fair,Cash App
+ca-202512-00002,2025-12-08 11:22:14 EDT,Cash App Pay,USD,-6.19,0,-6.19,,Barber 12Th Ave,Cash App
+ca-202512-00003,2025-12-09 12:33:14 EDT,Cash App Pay,USD,-22.24,0,-22.24,,Food Carts Pdx,Cash App
+ca-202512-00004,2025-12-11 13:44:14 EDT,Add Cash,USD,100.00,0,100.00,,Jordan Reyes,Cash App
+ca-202512-00005,2025-12-13 14:55:14 EDT,Cash App Pay,USD,-8.95,0,-8.95,,Vinyl Fair,Cash App
+ca-202512-00006,2025-12-19 15:06:14 EDT,Cash App Pay,USD,-12.85,0,-12.85,,Barber 12Th Ave,Cash App
+ca-202512-00007,2025-12-27 16:17:14 EDT,Cash App Pay,USD,-33.80,0,-33.80,,Vinyl Fair,Cash App
+ca-202512-00008,2025-12-27 17:28:14 EDT,Received,USD,17.27,0,17.27,,J. Doe,Cash App
