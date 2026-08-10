@@ -250,3 +250,24 @@ regardless.
 **Why:** Observed twice on real models: given a monthly figure and a horizon, even the 7B
 multiplied wrong in prose ($296.70 for a true $386.70). If a figure isn't handed over, a
 model will derive it — so the fix is to leave it nothing to derive.
+
+## D-022 · 2026-08-10 · Launcher = thin OS wrappers over a stdlib-only launcher.py
+
+**Decision:** `Start Meridian.bat`, `Start Meridian.command`, and `start.sh` only locate a
+Python and run `launcher.py`, which uses the standard library exclusively: version check
+with a download link, venv creation, pinned install keyed to a requirements hash (reinstall
+only when the pin set changes), migrations, idempotent demo seeding, live Ollama/model
+detection with the exact enable command, port fallback 8787→8799, health polling, Chrome/
+Edge app-mode with plain-browser and print-the-URL fallbacks, graceful Ctrl-C/close.
+
+**Why:** All launch logic in one cross-platform, testable file instead of three divergent
+shell dialects — and it must run before any dependency exists, hence stdlib-only.
+
+**Clean-machine test (brief §17), run 2026-08-10 in a fresh directory from the zip with no
+venv:** extract → `./start.sh` → private venv created, pinned dependencies installed, three
+migrations applied, both demo profiles seeded (2,277 + 1,073 rows), friendly AI-off note
+(Ollama absent — the app started anyway, as required), server healthy on 8787 in ~40 s
+total. Verified over HTTP: profile list, login, populated dashboard, degraded AI status
+with the enable hint, SPA served. Relaunch reused the venv and was up in seconds. The
+browser step was skipped via MERIDIAN_NO_BROWSER (headless test container); on a desktop it
+opens Chrome/Edge in app mode or any browser as a tab.
