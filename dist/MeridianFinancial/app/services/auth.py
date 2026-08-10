@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import time
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +23,30 @@ class AuthError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+# Brute-force protection. Found by the milestone-16 security audit: nothing stopped
+# unlimited password guesses against a known demo email. In-process state is the
+# right scope for a single-user local app (D-026).
+MAX_ATTEMPTS = 8
+LOCKOUT_SECONDS = 300
+_failures: dict[str, list[float]] = {}
+
+
+def _recent_failures(email: str) -> list[float]:
+    now = time.monotonic()
+    kept = [t for t in _failures.get(email, []) if now - t < LOCKOUT_SECONDS]
+    _failures[email] = kept
+    return kept
+
+
+def _record_failure(email: str) -> None:
+    _failures.setdefault(email, []).append(time.monotonic())
+
+
+def reset_login_throttle() -> None:
+    """Testing hook."""
+    _failures.clear()
 
 
 class AuthService:
@@ -50,14 +75,23 @@ class AuthService:
         return profile
 
     async def login(self, email: str, password: str) -> UserProfile:
-        found = await self.users.get_by_email_with_hash(email.strip().lower())
+        email = email.strip().lower()
+        if len(_recent_failures(email)) >= MAX_ATTEMPTS:
+            raise AuthError(
+                "Too many failed sign-in attempts. Wait five minutes and try again.",
+                status_code=429)
+
+        found = await self.users.get_by_email_with_hash(email)
         if found is None:
+            _record_failure(email)
             raise AuthError("Email or password is incorrect.", status_code=401)
         profile, password_hash = found
         if not verify_password(password_hash, password):
+            _record_failure(email)
             await self.audit.append(profile.id, event="login.failed")
             await self.session.commit()
             raise AuthError("Email or password is incorrect.", status_code=401)
+        _failures.pop(email, None)
 
         now = dt.datetime.now(dt.timezone.utc)
         await self.users.touch_last_login(profile.id, now)

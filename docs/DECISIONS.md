@@ -297,3 +297,13 @@ screenshots.
 **Why:** The graded deliverables need embedded screenshots with a visible system clock,
 which Markdown in a repository cannot hold. The Markdown files remain the working source
 of truth; the Word documents are generated from them so the two cannot drift.
+
+## D-026 · 2026-08-10 · Login throttling (security audit finding)
+
+**Decision:** Eight failed sign-ins per email within five minutes triggers a 429 lockout,
+held in process memory.
+
+**Why:** The security audit found nothing limited password guessing, and the demo profile
+emails are published in the README — an attacker starts with half of every credential.
+In-process state is the correct scope for a single-user local app; a deployed instance
+would move this to the database or a shared cache.

@@ -88,3 +88,29 @@ async def test_index_html_is_never_cached(client):
     resp = await client.get("/")
     assert resp.status_code == 200
     assert "no-store" in resp.headers.get("cache-control", "")
+
+
+async def test_login_is_throttled_after_repeated_failures(client):
+    """Security audit finding: unlimited password guesses were possible against
+    a known email (the demo profiles are published in the README)."""
+    from app.services.auth import reset_login_throttle
+
+    reset_login_throttle()
+    await client.post("/api/auth/register", json=USER)
+    client.cookies.clear()
+
+    for _ in range(8):
+        resp = await client.post("/api/auth/login",
+                                 json={"email": USER["email"], "password": "wrong"})
+        assert resp.status_code == 401
+
+    resp = await client.post("/api/auth/login",
+                             json={"email": USER["email"], "password": "wrong"})
+    assert resp.status_code == 429
+    assert "Too many failed" in resp.json()["detail"]
+
+    # Even the correct password is refused while locked out.
+    resp = await client.post("/api/auth/login",
+                             json={"email": USER["email"], "password": USER["password"]})
+    assert resp.status_code == 429
+    reset_login_throttle()
