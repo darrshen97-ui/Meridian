@@ -144,5 +144,6 @@ TypeScript; `npm run build` outputs into `app/static`), the deterministic datase
 generator (`scripts/generate_mock_data.py`), 154 pytest + 13 vitest tests
 (`.venv/bin/python -m pytest`, `cd frontend && npm test`), and the build script
 (`python scripts/build_zip.py` → `dist/MeridianFinancial-v0.1.zip`). Project
-documentation lives in `docs/` — the build plan, decision log, dataset guide, and the
-course deliverables.
+documentation lives in `docs/` — the build plan (`BUILD_PLAN.md`), decision log
+(`DECISIONS.md`, 23 entries), prompt and time logs, the development report
+(`DEV_REPORT.md`), and the screenshot guide (`SCREENSHOT_GUIDE.md`).

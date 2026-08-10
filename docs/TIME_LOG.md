@@ -20,4 +20,5 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | 12 | Budgets + simulator | Aug 10, 2026 | ~1.5 h | Projection math verified against manual recomputation of the real distribution |
 | 13 | Hardening: errors, responsive, a11y | Aug 10, 2026 | ~1 h | 375px verified overflow-free; all 9 routes smoke-rendered by vitest |
 | 14 | Packaging + launcher + zip | Aug 10, 2026 | ~1.5 h | Clean-machine test passed: zip → start.sh → healthy app in ~40 s, degraded-AI path exercised |
-| 15 | Assignment deliverables | — | — | |
+| 15 | Assignment deliverables | Aug 10, 2026 | ~45 min | DEV_REPORT, SCREENSHOT_GUIDE, final log sweep |
+| — | **Total** | Aug 9–10, 2026 | **~22 h** | |
