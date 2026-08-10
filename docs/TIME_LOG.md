@@ -18,6 +18,6 @@ Running log of time spent per milestone. Feeds the development report's time-spe
 | 10 | Reconciliation engine + narration | Aug 9, 2026 | ~1.5 h | Full-pipeline test: 79 periods reconciled, 3 planted divergences found, zero false positives |
 | 11 | Coach + tool use | Aug 9, 2026 | ~2 h | Tested on both real models: 3B exposed 3 weaknesses (fixed deterministically); 7B default answers correctly |
 | 12 | Budgets + simulator | Aug 10, 2026 | ~1.5 h | Projection math verified against manual recomputation of the real distribution |
-| 13 | Hardening: errors, responsive, a11y | — | — | |
+| 13 | Hardening: errors, responsive, a11y | Aug 10, 2026 | ~1 h | 375px verified overflow-free; all 9 routes smoke-rendered by vitest |
 | 14 | Packaging + launcher + zip | — | — | |
 | 15 | Assignment deliverables | — | — | |

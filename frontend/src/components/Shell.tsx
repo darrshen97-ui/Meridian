@@ -32,6 +32,10 @@ export function Shell() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[1240px]">
+      <a href="#main"
+        className="absolute -top-10 left-2 z-10 bg-surface px-3 py-1 text-[13px] focus:top-2">
+        Skip to content
+      </a>
       <aside className="hidden w-[184px] shrink-0 border-r border-rule px-4 py-6 md:block">
         <p className="px-3 pb-6 text-[15px] font-semibold tracking-tight">Meridian</p>
         <nav aria-label="Primary" className="border-l border-rule">
@@ -74,8 +78,10 @@ export function Shell() {
           </nav>
         </div>
 
-        <main className="px-4 py-6 md:px-8 md:py-8">
-          <Outlet />
+        <main id="main" className="px-4 py-6 md:px-8 md:py-8">
+          <div className="overflow-x-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

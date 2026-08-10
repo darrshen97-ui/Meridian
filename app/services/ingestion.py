@@ -73,9 +73,16 @@ class IngestionService:
 
     # -- Upload ------------------------------------------------------------
 
+    MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+
     async def upload(self, user_id: int, filename: str, content: bytes) -> DocumentInfo:
         if not content:
             raise IngestionError(f"{filename} is empty.")
+        if len(content) > self.MAX_UPLOAD_BYTES:
+            raise IngestionError(
+                f"{filename} is {len(content) // (1024 * 1024)} MB — statements are "
+                "expected under 15 MB. If this is a real statement, split the export.",
+                status_code=413)
         sha = hashlib.sha256(content).hexdigest()
         already = await self.documents.find_by_sha(user_id, sha)
         if already is not None:

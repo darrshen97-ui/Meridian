@@ -49,7 +49,8 @@ async def client(tmp_path, monkeypatch):
 
     app = create_app()
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://testserver"
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://testserver",
     ) as http:
         yield http
 

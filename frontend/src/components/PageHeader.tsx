@@ -1,8 +1,13 @@
+import { useEffect } from "react";
+
 export function PageHeader({ title, sub, actions }: {
   title: string;
   sub?: string;
   actions?: React.ReactNode;
 }) {
+  useEffect(() => {
+    document.title = `${title} — Meridian`;
+  }, [title]);
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 pb-4">
       <div>
