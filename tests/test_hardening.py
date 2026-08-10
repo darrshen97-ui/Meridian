@@ -80,3 +80,11 @@ async def test_js_bundle_is_served_as_javascript_not_text(client, monkeypatch):
     # index.html must be HTML, and the health probe reports the effective type.
     assert (await client.get("/")).headers["content-type"].startswith("text/html")
     assert main.CONTENT_TYPES[".js"] == "text/javascript"
+
+
+async def test_index_html_is_never_cached(client):
+    """index.html names content-hashed bundles; a cached copy points at files
+    that no longer exist after a rebuild and the app renders blank."""
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "no-store" in resp.headers.get("cache-control", "")

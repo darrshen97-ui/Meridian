@@ -66,6 +66,8 @@ class TypedStaticFiles(StaticFiles):
         declared = content_type_for(Path(full_path).suffix)
         if declared:
             response.headers["content-type"] = declared
+        # Asset filenames carry a content hash, so they are safe to cache hard.
+        response.headers["cache-control"] = "public, max-age=31536000, immutable"
         return response
 
 
@@ -170,7 +172,11 @@ def create_app() -> FastAPI:
             if path and candidate.is_file() and candidate.is_relative_to(STATIC_DIR.resolve()):
                 return FileResponse(candidate,
                                     media_type=content_type_for(candidate.suffix))
-            return FileResponse(index_file, media_type="text/html; charset=utf-8")
+            # index.html must NEVER be cached: it names the hashed bundles, so a
+            # stale copy points at files that no longer exist and the app renders
+            # blank with no error. This is what a rebuild broke for a real user.
+            return FileResponse(index_file, media_type="text/html; charset=utf-8",
+                                headers={"cache-control": "no-store, must-revalidate"})
     else:
         # The API is up but the interface wasn't built into this copy. Say so in
         # the browser with the fix, instead of a bare 404 (non-negotiable #6).
