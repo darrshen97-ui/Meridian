@@ -140,6 +140,20 @@ Flags set on an earlier deploy are kept. Cloud Run switches traffic to the new
 revision only after it starts successfully, so a broken build cannot take the live
 URL down.
 
+### Optional: deploy automatically on every push
+
+If you'd rather not run anything after a push, Cloud Run can watch the repository
+itself. In the console: **Cloud Run → the `meridian` service → Edit & deploy new
+revision → Set up continuous deployment**. Authorise GitHub, pick
+`darrshen97-ui/Meridian`, branch `^main$`, build type **Dockerfile**, and save. Google
+creates a Cloud Build trigger; from then on every push to `main` builds a new image
+and rolls it out, and the build log is in the console under Cloud Build → History.
+
+This is worth turning on only once the app is settled — while iterating, the manual
+command gives you control over *when* the live URL changes. Note that the trigger
+builds whatever is on `main`, so the GitHub Actions test run (`.github/workflows/ci.yml`)
+is what stands between a broken commit and a broken deployment.
+
 ### Shutting it down
 
 ```bash
