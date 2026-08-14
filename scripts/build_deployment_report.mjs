@@ -118,14 +118,19 @@ const doc = new Document({
       table(["#", "Step", "What was done"], STEPS, [420, 1900, 7040]),
 
       h2("The commands"),
-      p("From the repository root, once per project:"),
-      mono("gcloud auth login"),
+      p("Run from Google Cloud Shell (shell.cloud.google.com), a browser terminal with gcloud and git already installed, so the deployment needs nothing installed locally. Once per project:"),
       mono("gcloud config set project YOUR_PROJECT_ID"),
-      mono("gcloud services enable run.googleapis.com cloudbuild.googleapis.com"),
+      mono("gcloud services enable run.googleapis.com cloudbuild.googleapis.com \\"),
+      mono("    artifactregistry.googleapis.com"),
+      mono("git clone https://github.com/darrshen97-ui/Meridian.git && cd Meridian"),
       p("Then to deploy, and again for any future update:"),
       mono("gcloud run deploy meridian --source . --region us-central1 \\"),
-      mono("    --allow-unauthenticated --max-instances 1 --memory 1Gi"),
-      p("Cloud Build reads the committed Dockerfile, builds the image, and Cloud Run publishes it. The command prints the public URL when it finishes."),
+      mono("    --allow-unauthenticated --max-instances 1 --memory 1Gi \\"),
+      mono("    --set-env-vars JWT_SECRET=$(openssl rand -base64 36)"),
+      p("Cloud Build reads the committed Dockerfile, builds the image, and Cloud Run publishes it. The command prints the public URL when it finishes. One instance because the database is a file inside the container; a fixed session key because otherwise a new one is generated on each cold start and signs everyone out; and no --min-instances, which is what lets the service scale to zero and cost nothing while idle."),
+
+      h2("What it costs"),
+      p("Nothing, at this scale. Cloud Run bills for the time a container is actually serving a request, and its permanent monthly free tier — on the order of two million requests and 180,000 vCPU-seconds — is far beyond what a demonstration uses. Between visits the service runs zero instances and bills zero. Cloud Build and the image registry are likewise inside their free allowances for an image this size. A billing account has to be attached to the project even so."),
 
       new Paragraph({ children: [new PageBreak()] }),
 
@@ -147,6 +152,9 @@ const doc = new Document({
       h2("A path bug that only exists in a container"),
       p("Preparing the image surfaced a genuine defect. The code that ensures the database directory exists split the connection string on three slashes, which strips the leading slash of an absolute path: sqlite:////tmp/meridian/meridian.db silently became the relative tmp/meridian/meridian.db. Local runs use a relative path, so 157 passing tests had never touched the branch; the very first container start failed to open its database. It is now parsed with the database library's own URL parser, and a regression test covers both the absolute and relative forms."),
       p("The lesson matches the one from the testing assignment: a green test run proves the code is correct in the environment the tests run in, and deployment is a different environment."),
+
+      h2("Paying for the same work on every visit"),
+      p("Scale-to-zero has a cost of its own: the first request after an idle period waits for a container to start, and the start-up applied database migrations and seeded 3,350 transactions every single time — identical work with an identical result, charged as CPU and paid for in latency by whoever arrived first. The database is now built once during the image build and copied into place at start-up, which measured 4.4 seconds down to 0.76. The original path still runs when no prepared database is present, so an older image, or a future move to a hosted database, starts correctly either way."),
 
       h2("Deliberate limitations, stated rather than hidden"),
       bullet("The database is a file inside the container, so anything entered on the live URL resets when a new revision starts. The service is pinned to one instance for that reason. Persistence is a configuration change to Cloud SQL, not a rewrite — the schema was constrained to be portable from the beginning."),
