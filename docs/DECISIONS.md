@@ -307,3 +307,28 @@ held in process memory.
 emails are published in the README — an attacker starts with half of every credential.
 In-process state is the correct scope for a single-user local app; a deployed instance
 would move this to the database or a shared cache.
+
+## D-027 · 2026-08-10 · Cloud Run deployment shape, and an absolute-path bug it exposed
+
+**Decision:** Deploy as a container to Google Cloud Run (the target named in the build plan)
+via a committed `Dockerfile` and `serve.py` production entry point: binds `0.0.0.0:$PORT`,
+applies migrations and seeds the demo profiles at start-up, runs as a non-root user, sets
+`COOKIE_SECURE=true` because Cloud Run terminates TLS in front of the container, and keeps
+SQLite on the container's ephemeral `/tmp`. Deploy with `--max-instances=1`.
+
+**Why the caveats:** the container filesystem is ephemeral, so uploaded documents and any
+data entered on the live URL reset when a new revision starts — acceptable for a public demo
+seeded with 3,350 generated transactions, and the reason for pinning a single instance
+(multiple instances would each hold a separate SQLite file). Cloud SQL is the documented
+path to persistence (D-001) and remains a configuration change, not a rewrite.
+
+**Bug this exposed:** `_ensure_sqlite_dir` split the URL on `///`, which strips the leading
+slash of an absolute path — `sqlite:////tmp/meridian/meridian.db` became the *relative*
+`tmp/meridian/meridian.db`. Local runs use a relative URL, so the whole build never hit it;
+the first container start failed to open its database. Now parsed with SQLAlchemy's own
+`make_url`, with a regression test covering both forms.
+
+**AI in the cloud:** the loopback guard means AI features are correctly unavailable on the
+public URL — the deployment cannot send financial data to a model it does not host. Every
+other feature works, which is exactly the degraded-but-not-broken behaviour the brief
+required.

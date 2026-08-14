@@ -114,3 +114,20 @@ async def test_login_is_throttled_after_repeated_failures(client):
                              json={"email": USER["email"], "password": USER["password"]})
     assert resp.status_code == 429
     reset_login_throttle()
+
+
+def test_absolute_sqlite_paths_are_not_silently_made_relative(tmp_path):
+    """Found while preparing the Cloud Run image: naive string splitting turned
+    sqlite:////abs/path.db into a relative path, so the container could not open
+    its database. Local runs use a relative URL and never hit this."""
+    from sqlalchemy.engine import make_url
+
+    from app.core.db import _ensure_sqlite_dir
+
+    absolute = f"sqlite:////{tmp_path.as_posix().lstrip('/')}/nested/meridian.db"
+    assert make_url(absolute).database.startswith("/")
+    _ensure_sqlite_dir(absolute)
+    assert (tmp_path / "nested").is_dir()
+
+    relative = "sqlite:///data/meridian.db"
+    assert make_url(relative).database == "data/meridian.db"

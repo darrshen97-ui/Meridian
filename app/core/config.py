@@ -23,7 +23,9 @@ class Settings(BaseSettings):
 
     jwt_secret: str | None = None
     session_hours: int = 24
-    cookie_secure: bool = False  # enabled in deployed (HTTPS) configuration only
+    # Local runs are plain HTTP on loopback; Cloud Run terminates TLS in front of
+    # the container, so COOKIE_SECURE=true is set in the deployed image.
+    cookie_secure: bool = False
 
     sample_data_dir: Path = Path("sample_data")
     mock_min_latency: float = 0.2
