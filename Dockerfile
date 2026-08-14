@@ -22,10 +22,16 @@ COPY app ./app
 COPY scripts ./scripts
 COPY sample_data ./sample_data
 
+# Build the demo database at image build time rather than on every cold start:
+# migrating and seeding 3,350 transactions takes seconds of CPU that visitors
+# would otherwise wait for, and pay for, on each scale-from-zero.
+RUN DATA_DIR=/app/seed DATABASE_URL=sqlite:////app/seed/meridian.db \
+    sh -c "python -m alembic upgrade head && python scripts/seed_demo.py"
+
 # Run as a non-root user; /tmp holds the ephemeral database.
 RUN useradd --create-home --uid 1001 meridian \
     && mkdir -p /tmp/meridian \
-    && chown -R meridian:meridian /app /tmp/meridian
+    && chown -R meridian:meridian /app /tmp/meridian /app/seed
 USER meridian
 
 EXPOSE 8080

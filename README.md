@@ -98,6 +98,14 @@ Everything has a working default; `.env.example` documents the full set. Copy it
 | `OLLAMA_MODEL` | `qwen2.5:7b-instruct` | Or choose in Settings |
 | `LLM_PROVIDER` | `ollama` | `anthropic` only with an explicit key — sends data off-device |
 
+## Deploying it publicly
+
+Meridian runs on Google Cloud Run as a container: one `gcloud run deploy` from a browser
+terminal, no local tooling, and no cost under the free tier because the service scales to
+zero between visits. Steps, costs and limitations are in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+AI features are unavailable on a public URL by design — the loopback guard means the app
+has no model it is willing to talk to there.
+
 ## Project structure
 
 ```

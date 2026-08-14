@@ -332,3 +332,22 @@ the first container start failed to open its database. Now parsed with SQLAlchem
 public URL — the deployment cannot send financial data to a model it does not host. Every
 other feature works, which is exactly the degraded-but-not-broken behaviour the brief
 required.
+
+## D-028 · 2026-08-14 · Bake the demo database into the image
+
+**Decision:** build the migrated, seeded SQLite database during `docker build` and copy it
+into place at start-up, instead of migrating and seeding on every container start.
+`serve.py` falls back to the original migrate-and-seed path when no baked database is
+present, so an older image, or a future non-SQLite `DATABASE_URL`, still starts correctly.
+
+**Why:** Cloud Run scales to zero, so *every* visitor after an idle period pays the start-up
+cost in latency, and the project pays it in billed CPU. Measured on the development
+container: 4.4 s to migrate and seed 3,350 transactions, against 0.76 s to copy a 1.4 MB
+file. The work is identical on each cold start and its result is identical too, which makes
+it build-time work that was being done at run time.
+
+**Tested:** the two branches are covered by `tests/test_deploy_entrypoint.py`, plus a live
+run of `serve.py` under Cloud Run's environment variables — health probe, sign-in, dashboard
+and transactions all served from the copied database. The Docker daemon is unavailable in
+the development container, so the image build itself was reproduced by running the
+Dockerfile's build command directly rather than by building the image.
