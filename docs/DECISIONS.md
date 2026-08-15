@@ -351,3 +351,53 @@ run of `serve.py` under Cloud Run's environment variables — health probe, sign
 and transactions all served from the copied database. The Docker daemon is unavailable in
 the development container, so the image build itself was reproduced by running the
 Dockerfile's build command directly rather than by building the image.
+
+## D-029 · 2026-08-15 · The demo profiles ship finished, and stored paths go relative
+
+**Decision:** the two demo profiles are seeded all the way through — provider sync,
+statement import, categorisation, reconciliation of every period, and budget targets —
+rather than stopping at the provider feed. The finished result is built once, into the
+container image and into the release zip, and copied into place at first start.
+
+**Why:** the demo profiles exist so someone with no data of their own has something to
+look at. Stopping at the provider sync left Documents, Reconciliation and Budgets empty
+on three of the eight screens — a visitor's reasonable conclusion is that those features
+do not work, which is the opposite of what a demo is for. It was also the first thing the
+project's own user reported after downloading it.
+
+**Path portability (the bug this would otherwise have shipped):** document rows recorded
+an *absolute* stored path. A database built at `/app/seed` and opened at `/tmp/meridian`
+— or built in a container and opened on someone's laptop — then points every document at
+a file that isn't there, and the Documents screen 410s on every row while claiming the
+files were uploaded. Paths are now stored relative to the data directory and resolved
+through `resolve_stored_path`, which still accepts the absolute rows written before this.
+
+**Priya's statements:** she had provider data only, so giving her documents meant two new
+institutions' layouts rather than a copy of Jordan's — Ally prints unsigned Withdrawals
+and Deposits columns, so a row's direction lives only in the running balance, and Capital
+One prints dates with no year on them at all. Two more parsers, two more golden-tested
+layouts, 36 more statements.
+
+**What is deliberately *not* pre-filled:** the 282 cryptic descriptors that exist to
+populate the review queue. Filling those from the generator's ground truth would have
+deleted the feature they were built to demonstrate. Jordan opens with 309 transactions
+waiting for triage; the rest carry `category_source = "rules"` where the deterministic
+engine placed them and `"demo"` where the seeder did, so nothing claims a model ran.
+
+## D-030 · 2026-08-15 · The demo profiles publish their own passwords
+
+**Decision:** `/api/auth/profiles` returns `demo_password` and a one-line description for
+the two seeded profiles, and the sign-in screen fills the password in. Profiles a person
+creates return `null` for both, and nothing else about them is exposed before sign-in.
+
+**Why:** those credentials are already printed in the README, the dataset guide and the
+deployment instructions. Making a first-time visitor leave the app to find a password
+that is published three feet away is friction that buys no security — and on the public
+Cloud Run URL, the visitor may not have the README at all. The single source of truth is
+`app/core/demo.py`, which the seeder also reads, so the screen cannot drift from the
+passwords the profiles were actually created with.
+
+**What this does not weaken:** the login throttle still applies (8 failures, 5 minutes),
+sessions are unchanged, and a real profile's password is never derivable from anything
+the endpoint returns. A test asserts both halves — that demo profiles publish a password
+that works, and that a user-created profile publishes nothing.

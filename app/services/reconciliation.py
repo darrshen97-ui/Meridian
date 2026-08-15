@@ -15,7 +15,6 @@ engine runs, a row's identities tell the story —
 from __future__ import annotations
 
 import datetime as dt
-from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +27,7 @@ from app.repositories.ledger import AccountRepository
 from app.repositories.reconciliation import ReconciliationRepository
 from app.repositories.sync import BalanceRepository
 from app.services.ai import AIService
+from app.services.ingestion import resolve_stored_path
 from app.services.dedupe import similarity
 from app.services.ledger import LedgerError
 
@@ -315,8 +315,8 @@ class ReconciliationService:
                 Document.period_end == period_end,
                 Document.parse_status.in_(("parsed", "partial")))))
         for doc in docs:
-            path = Path(doc.stored_path)
-            if not path.exists():
+            path = resolve_stored_path(doc.stored_path)
+            if path is None or not path.exists():
                 continue
             content = path.read_bytes()
             parser = find_parser(doc.filename, content)

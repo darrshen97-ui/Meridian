@@ -15,7 +15,10 @@ from pathlib import Path
 from sqlalchemy.engine import make_url
 
 # Prepared during the image build so scale-from-zero is fast (see Dockerfile).
-BAKED_DB = Path("/app/seed/meridian.db")
+# Holds the seeded database and the demo profiles' stored statement files, which
+# the Documents screen serves and reconciliation re-reads.
+BAKED_SEED = Path("/app/seed")
+BAKED_DB = BAKED_SEED / "meridian.db"
 
 
 def run(label: str, argv: list[str]) -> None:
@@ -26,15 +29,20 @@ def run(label: str, argv: list[str]) -> None:
 
 
 def prepare_database() -> None:
-    """Copy the pre-seeded database into place, or build one if it isn't baked."""
+    """Copy the pre-seeded data into place, or build it if it isn't baked."""
     url = os.environ.get("DATABASE_URL", "")
     target = Path(make_url(url).database) if url.startswith("sqlite") else None
 
     if target and BAKED_DB.exists():
         if not target.exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(BAKED_DB, target)
-            print(f"[startup] restored pre-seeded database to {target}", flush=True)
+            data_dir = Path(os.environ.get("DATA_DIR", target.parent))
+            # The whole tree, not just the database: document rows point at stored
+            # files, and a Documents screen that 410s on every row is worse than none.
+            shutil.copytree(BAKED_SEED, data_dir, dirs_exist_ok=True)
+            if not target.exists():  # DATA_DIR and the database can live apart
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(BAKED_DB, target)
+            print(f"[startup] restored pre-seeded data to {data_dir}", flush=True)
         return
 
     run("applying database migrations", [sys.executable, "-m", "alembic", "upgrade", "head"])

@@ -19,13 +19,21 @@ from app.parsers.csv_platforms import (
     VenmoCsvParser,
 )
 from app.parsers.ofx_file import OfxStatementParser
-from app.parsers.pdf_banks import AmericanBankPdfParser, ChasePdfParser, DiscoverPdfParser
+from app.parsers.pdf_banks import (
+    AllyPdfParser,
+    AmericanBankPdfParser,
+    CapitalOnePdfParser,
+    ChasePdfParser,
+    DiscoverPdfParser,
+)
 
 # The registry: adding a new institution's layout = one class + one line here.
 PARSERS[:] = [
     AmericanBankPdfParser(),
     ChasePdfParser(),
     DiscoverPdfParser(),
+    AllyPdfParser(),
+    CapitalOnePdfParser(),
     VenmoCsvParser(),
     CashAppCsvParser(),
     BinanceCsvParser(),

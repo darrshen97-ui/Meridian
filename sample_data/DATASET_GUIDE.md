@@ -26,6 +26,8 @@ The two profiles share **zero** merchants, institutions, and cities by construct
 
 ## Document inventory
 
+### Jordan Reyes (`jordan/`)
+
 | Kind | Count |
 |---|---|
 | PDF bank/card statements | 71 |
@@ -38,6 +40,22 @@ The two profiles share **zero** merchants, institutions, and cities by construct
 
 Chase checking ••7734 appears in **both** PDF and OFX form on purpose — importing both
 must collapse to single transactions via dedupe (DECISIONS.md D-002).
+
+### Priya Raman (`priya/`)
+
+| Account | Statements |
+|---|---|
+| Ally Bank Ally Interest Checking ••5502 | 12 |
+| Ally Bank Ally Online Savings ••7719 | 12 |
+| Capital One Capital One Venture ••3345 | 12 |
+
+36 PDFs in two layouts neither of Jordan's institutions uses:
+
+- **Ally** prints *Withdrawals* and *Deposits* as separate unsigned columns, so a row's
+  direction exists only in the running balance. The parser derives the sign from the
+  balance movement and reports a problem when the printed amount disagrees with it.
+- **Capital One** prints dates with **no year** (`Aug 03`); the year is printed once, in
+  the billing-period header. Credits carry a **trailing minus** (`450.00-`).
 
 ## The 13 planted events (verify the app catches every one)
 

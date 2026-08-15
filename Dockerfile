@@ -22,9 +22,11 @@ COPY app ./app
 COPY scripts ./scripts
 COPY sample_data ./sample_data
 
-# Build the demo database at image build time rather than on every cold start:
-# migrating and seeding 3,350 transactions takes seconds of CPU that visitors
-# would otherwise wait for, and pay for, on each scale-from-zero.
+# Build the demo data at image build time rather than on every cold start: migrating,
+# seeding 3,350 transactions, importing 153 statements, categorising, reconciling 115
+# periods and setting budgets is about a minute of CPU that visitors would otherwise
+# wait for, and pay for, on each scale-from-zero. Document rows record paths relative
+# to the data directory, so the tree is portable to wherever serve.py copies it.
 RUN DATA_DIR=/app/seed DATABASE_URL=sqlite:////app/seed/meridian.db \
     sh -c "python -m alembic upgrade head && python scripts/seed_demo.py"
 

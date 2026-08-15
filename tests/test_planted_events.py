@@ -15,7 +15,12 @@ JORDAN = {"display_name": "Jordan Reyes", "email": "jordan@meridian.demo",
 
 
 async def _import_everything(client) -> None:
-    """Sync the provider, then import all 117 sample documents at service level."""
+    """Sync the provider, then import all 117 of Jordan's documents at service level.
+
+    Priya's statements are deliberately excluded: they belong to the other profile,
+    and importing another person's bank statements into this ledger is exactly the
+    thing the app is not supposed to make easy.
+    """
     assert (await client.post("/api/auth/register", json=JORDAN)).status_code == 201
     assert (await client.post("/api/sync")).status_code == 200
 
@@ -25,7 +30,7 @@ async def _import_everything(client) -> None:
     me = (await client.get("/api/auth/me")).json()
     async with get_session_factory()() as session:
         service = IngestionService(session)
-        for path in sorted(SAMPLE.rglob("*")):
+        for path in sorted((SAMPLE / "jordan").rglob("*")):
             if path.suffix.lower() not in (".pdf", ".csv", ".ofx"):
                 continue
             doc = await service.upload(me["id"], path.name, path.read_bytes())

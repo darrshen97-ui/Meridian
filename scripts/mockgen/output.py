@@ -16,6 +16,10 @@ from .render_pdf import render_statement
 
 PDF_ACCOUNTS = ["ab_chk_4417", "ab_chk_8123", "ab_sav_2290",
                 "ch_chk_7734", "ch_cc_1902", "disc_6088", "ch_loan_5561"]
+# Priya's statements exist so the second demo profile has documents to import and
+# periods to reconcile; her institutions stay disjoint from Jordan's, which means
+# two more layouts and two more parsers rather than a copy of his.
+PDF_ACCOUNTS_PRIYA = ["ally_chk_5502", "ally_sav_7719", "capone_3345"]
 
 
 def build_ledgers() -> tuple[Ledger, Ledger]:
@@ -34,11 +38,11 @@ def statement_months_for(led: Ledger, key: str) -> list[tuple[int, int]]:
     return months
 
 
-def write_pdfs(out_dir: Path, led: Ledger) -> list[str]:
+def write_pdfs(out_dir: Path, led: Ledger, keys: list[str] | None = None) -> list[str]:
     written = []
-    for key in PDF_ACCOUNTS:
+    for key in keys or PDF_ACCOUNTS:
         spec = led.account(key)
-        folder = out_dir / "jordan" / "statements" / \
+        folder = out_dir / led.profile_key / "statements" / \
             spec.institution.lower().replace(" ", "_")
         folder.mkdir(parents=True, exist_ok=True)
         slug = f"{spec.type}_{spec.mask}"
@@ -165,6 +169,8 @@ The two profiles share **zero** merchants, institutions, and cities by construct
 
 ## Document inventory
 
+### {led_j.display_name} (`{led_j.profile_key}/`)
+
 | Kind | Count |
 |---|---|
 | PDF bank/card statements | {inventory['pdf_bank']} |
@@ -177,6 +183,20 @@ The two profiles share **zero** merchants, institutions, and cities by construct
 
 Chase checking ••7734 appears in **both** PDF and OFX form on purpose — importing both
 must collapse to single transactions via dedupe (DECISIONS.md D-002).
+
+### {led_p.display_name} (`{led_p.profile_key}/`)
+
+| Account | Statements |
+|---|---|
+{_priya_inventory(led_p)}
+
+{inventory['pdf_priya']} PDFs in two layouts neither of Jordan's institutions uses:
+
+- **Ally** prints *Withdrawals* and *Deposits* as separate unsigned columns, so a row's
+  direction exists only in the running balance. The parser derives the sign from the
+  balance movement and reports a problem when the printed amount disagrees with it.
+- **Capital One** prints dates with **no year** (`Aug 03`); the year is printed once, in
+  the billing-period header. Credits carry a **trailing minus** (`450.00-`).
 
 ## The 13 planted events (verify the app catches every one)
 
@@ -238,6 +258,7 @@ def generate(out_dir: Path) -> dict:
 
     led_j, led_p = build_ledgers()
     pdfs = write_pdfs(out_dir, led_j)
+    priya_pdfs = write_pdfs(out_dir, led_p, PDF_ACCOUNTS_PRIYA)
     csvs = render_all_csv(out_dir, led_j)
     ofx = render_all_ofx(out_dir, led_j)
     write_provider_fixture(out_dir, led_j)
@@ -246,6 +267,7 @@ def generate(out_dir: Path) -> dict:
     inventory = {
         "pdf_bank": sum(1 for p in pdfs if "loan" not in p),
         "pdf_loan": sum(1 for p in pdfs if "loan" in p),
+        "pdf_priya": len(priya_pdfs),
         "csv": len(csvs),
         "ofx": len(ofx),
     }
@@ -256,3 +278,9 @@ def generate(out_dir: Path) -> dict:
         "priya_txns": len(led_p.txns),
         **inventory,
     }
+
+
+def _priya_inventory(led_p: Ledger) -> str:
+    return "\n".join(
+        f"| {led_p.account(k).institution} {led_p.account(k).display_name} "
+        f"••{led_p.account(k).mask} | 12 |" for k in PDF_ACCOUNTS_PRIYA)

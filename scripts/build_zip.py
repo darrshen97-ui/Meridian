@@ -8,6 +8,7 @@ required at runtime — and preserves executable bits for the POSIX launchers.
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -35,6 +36,30 @@ EXECUTABLE = {"Start Meridian.command", "start.sh"}
 def _copytree(src: Path, dst: Path) -> None:
     shutil.copytree(src, dst,
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"))
+
+
+def build_prepared_demo(target: Path) -> None:
+    """Seed the demo profiles once, here, so the first launch doesn't have to.
+
+    The launcher copies this into data/ on first run. It is only usable because
+    document rows store paths relative to the data directory (D-029) — an absolute
+    path from this machine would resolve to nothing on the machine that unzips it.
+    """
+    print("Preparing the demo profiles (about a minute) …")
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
+    env = {
+        **os.environ,
+        "DATA_DIR": str(target),
+        "DATABASE_URL": f"sqlite:///{target.as_posix()}/meridian.db",
+        # Never reach for a model while building a release artefact.
+        "OLLAMA_BASE_URL": "http://127.0.0.1:11399",
+    }
+    for label, argv in (("migrations", [sys.executable, "-m", "alembic", "upgrade", "head"]),
+                        ("seeding", [sys.executable, str(ROOT / "scripts" / "seed_demo.py")])):
+        if subprocess.run(argv, cwd=ROOT, env=env).returncode != 0:
+            sys.exit(f"Preparing the demo profiles failed during {label}.")
 
 
 def build(skip_frontend: bool) -> None:
@@ -65,6 +90,7 @@ def build(skip_frontend: bool) -> None:
     _copytree(ROOT / "sample_data", STAGE / "sample_data")
     (STAGE / "scripts").mkdir()
     shutil.copy2(ROOT / "scripts" / "seed_demo.py", STAGE / "scripts" / "seed_demo.py")
+    build_prepared_demo(STAGE / "seed")
 
     print("Zipping …")
     ZIP_PATH.unlink(missing_ok=True)

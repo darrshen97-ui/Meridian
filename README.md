@@ -47,6 +47,15 @@ console window open while you use the app — closing it quits Meridian.
 | Jordan Reyes (primary demo, ~2,300 transactions) | `jordan@meridian.demo` | `rowhouse-ledger-26` |
 | Priya Raman (isolation demo, ~1,100 transactions) | `priya@meridian.demo` | `lakefront-audit-26` |
 
+You don't need to type either of these: the welcome screen fills the password in for the
+demo profiles, since they're published here anyway. A profile you create yourself shows
+nothing before you sign in.
+
+Both arrive fully worked-through — statements imported, transactions categorised, every
+period reconciled, budget targets set — so no screen opens empty. Jordan keeps 309
+cryptic transactions in the review queue on purpose; that's what the categoriser and the
+review flow are for.
+
 Each profile's data is completely isolated — at the database, filesystem, and AI-tool
 layers. You can also create your own profile from the welcome screen.
 
@@ -70,16 +79,28 @@ architecture, but it is off by default and clearly labeled as sending data off-d
 
 ## Loading the sample data
 
-`sample_data/` ships with a year of generated statements for the demo profiles:
+`sample_data/` ships with a year of generated statements for the demo profiles. Both
+profiles already have theirs imported; these are the source files, so you can watch the
+import happen yourself.
+
+Jordan (`sample_data/jordan/`):
 
 - **79 PDF statements** across American Bank, Chase (checking, Sapphire, auto loan), and
   Discover — three deliberately different layouts
 - **26 CSV exports** — Venmo (monthly), Cash App (monthly), Binance and Gemini (annual)
 - **12 OFX files** — Chase checking
 
-Sign in as Jordan, open **Documents**, and drag any of them in. You'll see exactly what a
-file contains before anything is imported; rows that already arrived via live sync merge
-instead of duplicating. `sample_data/DATASET_GUIDE.md` lists the 13 planted events (a
+Priya (`sample_data/priya/`):
+
+- **36 PDF statements** across Ally (checking, savings) and Capital One — two more
+  layouts, chosen for what they make a parser do: Ally prints unsigned Withdrawals and
+  Deposits columns, so a row's direction survives only in the running balance, and
+  Capital One prints dates with no year on them.
+
+Sign in, open **Documents**, and drag any of them in. You'll see exactly what a file
+contains before anything is imported; rows that already arrived via live sync merge
+instead of duplicating — which is why re-importing a statement the demo already has
+adds nothing. `sample_data/DATASET_GUIDE.md` lists the 13 planted events (a
 duplicate charge, a never-cleared pending, a card compromise, …) so you can verify the app
 catches every one.
 

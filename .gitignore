@@ -11,10 +11,14 @@ data/
 # Node (frontend build-time only)
 frontend/node_modules/
 
-# NOTE: app/static (the prebuilt React bundle) and dist/ (the shippable zip) are
-# deliberately COMMITTED. Meridian is distributed as a runnable artifact: Node is a
+# NOTE: app/static (the prebuilt React bundle) and dist/*.zip (the shippable archive)
+# are deliberately COMMITTED. Meridian is distributed as a runnable artifact: Node is a
 # build-time dependency only, so downloading this repository must yield a working
 # app. See docs/DECISIONS.md D-023.
+# The folder the zip is staged from is not committed: it is the same bytes a second
+# time, and it now holds the prepared demo database and 153 statement files.
+dist/MeridianFinancial/
+
 frontend/tsconfig.tsbuildinfo
 
 # Node (build-time only)

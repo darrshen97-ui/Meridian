@@ -185,7 +185,8 @@ class TestPlantedEvents:
 
 class TestGeneratedFiles:
     def test_inventory(self):
-        assert len(list(SAMPLE.rglob("*.pdf"))) == 79
+        assert len(list((SAMPLE / "jordan").rglob("*.pdf"))) == 79
+        assert len(list((SAMPLE / "priya").rglob("*.pdf"))) == 36
         assert len(list(SAMPLE.rglob("*.ofx"))) == 12
         assert len(list(SAMPLE.rglob("*.csv"))) == 26
         assert (SAMPLE / "DATASET_GUIDE.md").exists()

@@ -1,9 +1,0 @@
-Transaction ID,Date,Transaction Type,Currency,Amount,Fee,Net Amount,Notes,Name of sender/receiver,Account
-ca-202603-00001,2026-03-01 10:11:14 EDT,Cash App Pay,USD,-6.26,0,-6.26,,Food Carts Pdx,Cash App
-ca-202603-00002,2026-03-02 11:22:14 EDT,Cash App Pay,USD,-6.23,0,-6.23,,Food Carts Pdx,Cash App
-ca-202603-00003,2026-03-02 12:33:14 EDT,Cash App Pay,USD,-8.86,0,-8.86,,Food Carts Pdx,Cash App
-ca-202603-00004,2026-03-08 13:44:14 EDT,Received,USD,15.68,0,15.68,,J. Doe,Cash App
-ca-202603-00005,2026-03-11 14:55:14 EDT,Add Cash,USD,100.00,0,100.00,,Jordan Reyes,Cash App
-ca-202603-00006,2026-03-12 15:06:14 EDT,Cash App Pay,USD,-14.41,0,-14.41,,Barber 12Th Ave,Cash App
-ca-202603-00007,2026-03-23 16:17:14 EDT,Cash App Pay,USD,-13.19,0,-13.19,,N Mississippi Mkt,Cash App
-ca-202603-00008,2026-03-26 17:28:14 EDT,Cash App Pay,USD,-39.25,0,-39.25,,Barber 12Th Ave,Cash App

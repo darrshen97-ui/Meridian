@@ -2,6 +2,9 @@ export interface Profile {
   id: number;
   display_name: string;
   email: string;
+  /** Present only on the two seeded demo profiles, whose credentials are published. */
+  demo_password?: string | null;
+  demo_blurb?: string | null;
 }
 
 export interface Institution {

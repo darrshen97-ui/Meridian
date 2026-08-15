@@ -82,8 +82,28 @@ def ensure_environment() -> None:
     say()
 
 
+def restore_prepared_demo() -> bool:
+    """Use the demo data prepared when this release was built, if it's here.
+
+    Building it from scratch takes about a minute of parsing and reconciling; the
+    zip ships the finished result so the first launch opens on a populated app
+    instead of a progress log. Document paths are stored relative to data/, which
+    is what makes the prepared copy usable on someone else's machine.
+    """
+    prepared = ROOT / "seed"
+    data = ROOT / "data"
+    if not (prepared / "meridian.db").exists() or (data / "meridian.db").exists():
+        return False
+    say("Restoring the prepared demo profiles…")
+    shutil.copytree(prepared, data, dirs_exist_ok=True)
+    say()
+    return True
+
+
 def prepare_database() -> None:
     say("Preparing the database…")
+    if restore_prepared_demo():
+        return
     result = subprocess.run([str(venv_python()), "-m", "alembic", "upgrade", "head"],
                             cwd=ROOT)
     if result.returncode != 0:

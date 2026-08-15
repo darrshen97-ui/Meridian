@@ -1,9 +1,13 @@
 """PDF statement rendering — reportlab, deterministic output.
 
-Three deliberately different layouts so the parsers do genuine work (brief §9):
+Five deliberately different layouts so the parsers do genuine work (brief §9):
   * American Bank — MM/DD/YY dates, Date|Description|Amount|Balance columns
   * Chase — 'Mon DD, YYYY' dates, summary block, Date|Description|Amount
   * Discover — MM/DD/YYYY, Trans Date|Post Date|Description|Amount column order
+  * Ally — ISO dates, separate Withdrawals and Deposits columns (unsigned), so the
+    direction of a row is carried only by the running balance
+  * Capital One — 'Mon DD' dates with no year at all (the year is printed once, in
+    the billing-period header), credits printed with a trailing minus
 Credit-card statements print purchases as positive numbers (industry convention),
 so parsers must normalize signs per institution. Long tables split across pages
 with repeated header rows (Chase Sapphire December spans a page break).
@@ -86,6 +90,10 @@ def render_statement(path: str, led: Ledger, spec: AccountSpec,
         _american_bank(story, led, spec, first, last, txns, begin, end)
     elif spec.institution == "Discover":
         _discover(story, led, spec, first, last, txns, begin, end)
+    elif spec.institution == "Ally Bank":
+        _ally(story, led, spec, first, last, txns, begin, end)
+    elif spec.institution == "Capital One":
+        _capital_one(story, led, spec, first, last, txns, begin, end)
     elif spec.type == "loan":
         _chase_loan(story, led, spec, first, last, txns, begin, end)
     else:
@@ -190,6 +198,73 @@ def _discover(story, led, spec, first, last, txns, begin, end) -> None:
     story.append(_table(rows, [0.95 * inch, 0.95 * inch, 3.7 * inch, 1.2 * inch], [3]))
     story.append(Spacer(1, 10))
     story.append(Paragraph("Discover · Questions: 1-800-555-0301", SMALL))
+
+
+def _ally(story, led, spec, first, last, txns, begin, end) -> None:
+    """Two unsigned amount columns: only the balance column says which way a row went."""
+    story.append(Paragraph("ALLY BANK", H1))
+    story.append(Paragraph("Ally Bank · Member FDIC · ally.example", SMALL))
+    story.append(Spacer(1, 10))
+    kind = "Interest Checking" if spec.type == "checking" else "Online Savings"
+    story.append(Paragraph(
+        f"{led.display_name} — Ally {kind} — account ending {spec.mask}", LABEL))
+    story.append(Paragraph(f"Statement period {first:%Y-%m-%d} to {last:%Y-%m-%d}", BODY))
+    story.append(Spacer(1, 8))
+    deposits = sum(t.amount_minor for t in txns if t.amount_minor > 0)
+    withdrawals = -sum(t.amount_minor for t in txns if t.amount_minor < 0)
+    story.append(_summary([
+        ("Beginning balance", f"${fmt_money(begin)}"),
+        ("Total deposits", f"${fmt_money(deposits)}"),
+        ("Total withdrawals", f"${fmt_money(withdrawals)}"),
+        ("Ending balance", f"${fmt_money(end)}"),
+    ]))
+    story.append(Spacer(1, 12))
+    rows = [["Date", "Description", "Withdrawals", "Deposits", "Balance"]]
+    running = begin
+    for t in txns:
+        running += t.amount_minor
+        out = fmt_money(-t.amount_minor) if t.amount_minor < 0 else ""
+        inn = fmt_money(t.amount_minor) if t.amount_minor > 0 else ""
+        rows.append([f"{t.stmt_date:%Y-%m-%d}", t.description[:48], out, inn,
+                     fmt_money(running)])
+    story.append(_table(rows, [0.95 * inch, 3.15 * inch, 1.0 * inch, 1.0 * inch,
+                               1.0 * inch], [2, 3, 4]))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Ally Bank · Questions: 1-800-555-0407", SMALL))
+
+
+def _capital_one(story, led, spec, first, last, txns, begin, end) -> None:
+    """Dates carry no year; credits print with a trailing minus."""
+    story.append(Paragraph("CAPITAL ONE", H1))
+    story.append(Paragraph("Capital One Bank (USA), N.A. · capitalone.example", SMALL))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(
+        f"Venture Rewards card — account ending in {spec.mask}", LABEL))
+    story.append(Paragraph(
+        f"Billing period {first:%b %d} - {last:%b %d}, {last:%Y} · {led.display_name}",
+        BODY))
+    story.append(Spacer(1, 8))
+    payments = sum(t.amount_minor for t in txns if t.amount_minor > 0)
+    purchases = -sum(t.amount_minor for t in txns if t.amount_minor < 0)
+    story.append(_summary([
+        ("Previous balance", f"${fmt_money(-begin)}"),
+        ("Payments and credits", f"-${fmt_money(payments)}"),
+        ("Purchases", f"${fmt_money(purchases)}"),
+        ("New balance", f"${fmt_money(-end)}"),
+    ]))
+    story.append(Spacer(1, 12))
+    rows = [["Trans Date", "Post Date", "Description", "Amount"]]
+    for t in txns:
+        # Cards post a day after the swipe; the posting date is the ledger's date.
+        swiped = max(t.stmt_date - dt.timedelta(days=1), first)
+        # Card convention: purchases positive; credits carry a trailing minus.
+        amount = (f"{fmt_money(t.amount_minor)}-" if t.amount_minor > 0
+                  else fmt_money(-t.amount_minor))
+        rows.append([f"{swiped:%b %d}", f"{t.stmt_date:%b %d}", t.description[:52],
+                     amount])
+    story.append(_table(rows, [0.9 * inch, 0.9 * inch, 3.9 * inch, 1.1 * inch], [3]))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Capital One · Questions: 1-800-555-0663", SMALL))
 
 
 def _chase_loan(story, led, spec, first, last, txns, begin, end) -> None:

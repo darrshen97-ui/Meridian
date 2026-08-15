@@ -80,13 +80,34 @@ export function Welcome() {
                 <li key={p.id} className="border-b border-rule">
                   <button type="button"
                     onClick={() => { setError(null); setMode({ view: "login", profile: p }); }}
-                    className="flex w-full items-baseline justify-between px-1 py-3 text-left hover:bg-surface">
-                    <span className="text-[15px] font-medium">{p.display_name}</span>
-                    <span className="text-[12px] text-ink-faint">{p.email}</span>
+                    className="w-full px-1 py-3 text-left hover:bg-surface">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="text-[15px] font-medium">
+                        {p.display_name}
+                        {p.demo_password && (
+                          <span className="ml-2 border border-rule-strong px-1 py-px align-middle
+                                           text-[10px] uppercase tracking-wide text-ink-muted">
+                            Demo
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-[12px] text-ink-faint">{p.email}</span>
+                    </span>
+                    {p.demo_blurb && (
+                      <span className="mt-1 block max-w-[46ch] text-[12px] text-ink-muted">
+                        {p.demo_blurb}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
             </ul>
+            {profiles.some((p) => p.demo_password) && (
+              <p className="pt-3 text-[12px] text-ink-muted">
+                The demo profiles sign in with one click — their passwords are filled in
+                for you, and their data is generated, not anyone's.
+              </p>
+            )}
             <div className="pt-4">
               <button type="button" className={quietBtn}
                 onClick={() => { setError(null); setMode({ view: "create" }); }}>
@@ -117,14 +138,23 @@ function LoginForm({ profile, busy, error, onBack, onSubmit }: {
   onBack: () => void;
   onSubmit: (password: string) => void;
 }) {
-  const [password, setPassword] = useState("");
+  // A demo profile arrives with its password already known, so the form is ready to
+  // submit the moment it opens; the field still shows what is being sent.
+  const [password, setPassword] = useState(profile.demo_password ?? "");
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSubmit(password); }}>
       <p className="text-[15px] font-medium">{profile.display_name}</p>
       <p className="text-[12px] text-ink-faint">{profile.email}</p>
       <label className="mt-4 block text-[13px] text-ink-muted" htmlFor="pw">Password</label>
-      <input id="pw" type="password" autoFocus value={password} className={field}
+      <input id="pw" type={profile.demo_password ? "text" : "password"} autoFocus
+        value={password} className={field}
         onChange={(e) => setPassword(e.target.value)} />
+      {profile.demo_password && (
+        <p className="mt-1 text-[12px] text-ink-muted">
+          Demo profile — this password is published in the README; it is filled in so
+          you can just press Sign in.
+        </p>
+      )}
       {error && <p role="alert" className="mt-2 text-[13px] text-critical">{error}</p>}
       <button type="submit" disabled={busy || !password} className={`mt-4 ${primaryBtn}`}>
         {busy ? "Signing in…" : "Sign in"}

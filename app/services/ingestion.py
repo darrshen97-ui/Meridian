@@ -30,6 +30,18 @@ INSTITUTION_KIND_BY_TYPE = {
 LIQUID_TYPES = {"checking", "savings", "payment_app"}
 
 
+def resolve_stored_path(stored_path: str | None) -> Path | None:
+    """Locate an uploaded file from what the database recorded.
+
+    Paths are stored relative to the data directory. Rows written before that was
+    true hold an absolute path, so both are accepted.
+    """
+    if not stored_path:
+        return None
+    path = Path(stored_path)
+    return path if path.is_absolute() else get_settings().data_dir / path
+
+
 class IngestionError(Exception):
     def __init__(self, message: str, status_code: int = 400, detail: dict | None = None):
         super().__init__(message)
@@ -99,13 +111,17 @@ class IngestionService:
                 status_code=422)
 
         safe_name = re.sub(r"[^A-Za-z0-9._-]", "_", filename)
-        folder = get_settings().data_dir / str(user_id) / "documents"
-        folder.mkdir(parents=True, exist_ok=True)
-        stored = folder / f"{sha[:12]}_{safe_name}"
+        relative = Path(str(user_id)) / "documents" / f"{sha[:12]}_{safe_name}"
+        stored = get_settings().data_dir / relative
+        stored.parent.mkdir(parents=True, exist_ok=True)
         stored.write_bytes(content)
 
+        # Recorded relative to the data directory: the demo database is built in one
+        # place (the container image, the release zip) and opened in another, and an
+        # absolute path baked in at build time points at nothing on the machine that
+        # ends up reading it.
         doc = await self.documents.create(user_id, kind=parser.kind, filename=filename,
-                                          stored_path=str(stored), sha256=sha)
+                                          stored_path=relative.as_posix(), sha256=sha)
         await self.audit.append(user_id, event="document.uploaded",
                                 detail={"document_id": doc.id, "filename": filename})
         await self.session.commit()
@@ -207,7 +223,7 @@ class IngestionService:
         if doc is None:
             raise IngestionError("Document not found.", status_code=404)
         path = await self.documents.stored_path(user_id, document_id)
-        stored = Path(path) if path else None
+        stored = resolve_stored_path(path)
         if stored is None or not stored.exists():
             raise IngestionError(
                 f"The stored file for {doc.filename} is missing. Upload it again.",

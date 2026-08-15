@@ -46,10 +46,37 @@ async def test_wrong_password_rejected(client):
     assert resp.status_code == 401
 
 
-async def test_profiles_list_is_names_only(client):
+async def test_profiles_list_exposes_nothing_about_a_real_profile(client):
+    """The welcome screen is pre-auth. A profile someone created gets a name and
+    nothing else — in particular the demo-credential fields stay empty, or the
+    convenience for the demo accounts would become a password leak for everyone."""
     await client.post("/api/auth/register", json=A)
     client.cookies.clear()
     resp = await client.get("/api/auth/profiles")
     assert resp.status_code == 200
     (profile,) = resp.json()
-    assert set(profile.keys()) == {"id", "display_name", "email"}
+    assert set(profile.keys()) == {"id", "display_name", "email",
+                                   "demo_password", "demo_blurb"}
+    assert profile["demo_password"] is None
+    assert profile["demo_blurb"] is None
+
+
+async def test_seeded_demo_profiles_publish_their_own_password(client):
+    """Their credentials are in the README and the dataset guide; the sign-in screen
+    fills them in so a first-time visitor can get in without hunting for them."""
+    from app.core.demo import DEMO_CREDENTIALS
+
+    email, password = next(iter(DEMO_CREDENTIALS.items()))
+    await client.post("/api/auth/register",
+                      json={"display_name": "Demo", "email": email,
+                            "password": password})
+    client.cookies.clear()
+
+    (profile,) = (await client.get("/api/auth/profiles")).json()
+    assert profile["demo_password"] == password
+    assert profile["demo_blurb"]
+
+    # And the password it publishes actually works.
+    resp = await client.post("/api/auth/login",
+                             json={"email": email, "password": profile["demo_password"]})
+    assert resp.status_code == 200

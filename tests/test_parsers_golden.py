@@ -14,7 +14,12 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from mockgen.core import STATEMENT_MONTHS  # noqa: E402
-from mockgen.output import build_ledgers, statement_months_for, PDF_ACCOUNTS  # noqa: E402
+from mockgen.output import (  # noqa: E402
+    PDF_ACCOUNTS,
+    PDF_ACCOUNTS_PRIYA,
+    build_ledgers,
+    statement_months_for,
+)
 
 from app.parsers import find_parser  # noqa: E402
 
@@ -27,6 +32,12 @@ def jordan():
     return led
 
 
+@pytest.fixture(scope="module")
+def priya():
+    _, led = build_ledgers()
+    return led
+
+
 def _parse(path: Path):
     content = path.read_bytes()
     parser = find_parser(path.name, content)
@@ -35,13 +46,17 @@ def _parse(path: Path):
 
 
 def _pdf_paths():
-    return sorted(SAMPLE.rglob("*.pdf"))
+    return sorted((SAMPLE / "jordan").rglob("*.pdf"))
+
+
+def _priya_pdf_paths():
+    return sorted((SAMPLE / "priya").rglob("*.pdf"))
 
 
 def test_every_document_has_a_parser_and_parses():
     docs = [p for p in SAMPLE.rglob("*")
             if p.suffix.lower() in (".pdf", ".csv", ".ofx")]
-    assert len(docs) == 117
+    assert len(docs) == 153
     for path in docs:
         parsed = _parse(path)
         assert parsed.problems == [], f"{path.name}: {parsed.problems[:2]}"
@@ -89,6 +104,64 @@ def test_pdf_statement_counts_per_account(jordan):
             spec.institution.lower().replace(" ", "_")
         got = len(list(folder.glob(f"{spec.type}_{spec.mask}_*.pdf")))
         assert got == len(months), key
+
+
+@pytest.mark.parametrize("path", _priya_pdf_paths(), ids=lambda p: p.name)
+def test_priya_pdf_statements_match_ledger_exactly(path, priya):
+    """Ally and Capital One: the two layouts where the amount as printed is not the
+    amount as meant — unsigned columns disambiguated by the running balance, and
+    dates with no year on them."""
+    account_key = {
+        "checking_5502": "ally_chk_5502", "savings_7719": "ally_sav_7719",
+        "credit_card_3345": "capone_3345",
+    }[path.stem.rsplit("_", 1)[0]]
+    year, month = map(int, path.stem.rsplit("_", 1)[1].split("-"))
+
+    expected = priya.statement_txns(account_key, year, month)
+    parsed = _parse(path)
+
+    assert len(parsed.transactions) == len(expected), path.name
+    for got, want in zip(parsed.transactions, expected):
+        assert got.posted_date == want.stmt_date, path.name
+        assert got.amount_minor == want.amount_minor, \
+            f"{path.name}: {got.description} {got.amount_minor} != {want.amount_minor}"
+
+    first = expected[0].stmt_date.replace(day=1)
+    begin = priya.balance_before(account_key, first)
+    assert parsed.opening_balance_minor == begin, path.name
+    assert parsed.closing_balance_minor == begin + sum(
+        t.amount_minor for t in expected), path.name
+    assert parsed.account.mask == priya.account(account_key).mask, path.name
+
+
+def test_priya_statement_counts_per_account(priya):
+    for key in PDF_ACCOUNTS_PRIYA:
+        spec = priya.account(key)
+        folder = SAMPLE / "priya" / "statements" / \
+            spec.institution.lower().replace(" ", "_")
+        got = len(list(folder.glob(f"{spec.type}_{spec.mask}_*.pdf")))
+        assert got == len(statement_months_for(priya, key)), key
+
+
+def test_capital_one_dates_carry_no_year_on_the_row():
+    """The rows really are year-less — the parser is resolving them, not reading them."""
+    path = SAMPLE / "priya" / "statements" / "capital_one" / "credit_card_3345_2026-01.pdf"
+    parsed = _parse(path)
+    assert all(t.posted_date.year == 2026 for t in parsed.transactions)
+    assert all(t.transaction_date is not None for t in parsed.transactions)
+
+
+def test_ally_rows_take_their_sign_from_the_balance_column():
+    """Both amount columns print unsigned, so a wrong sign here is a silent
+    corruption of someone's ledger rather than a visible failure."""
+    path = SAMPLE / "priya" / "statements" / "ally_bank" / "checking_5502_2025-08.pdf"
+    parsed = _parse(path)
+    assert any(t.amount_minor > 0 for t in parsed.transactions), "no credits recovered"
+    assert any(t.amount_minor < 0 for t in parsed.transactions), "no debits recovered"
+    rent = next(t for t in parsed.transactions if "RENT" in t.description)
+    assert rent.amount_minor < 0
+    pay = next(t for t in parsed.transactions if "PAYROLL" in t.description)
+    assert pay.amount_minor > 0
 
 
 def test_ofx_matches_ledger(jordan):
