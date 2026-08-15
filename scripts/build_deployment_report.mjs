@@ -90,7 +90,8 @@ const STEPS = [
   ["3", "Verified the deployment artefact locally", "Ran the production entry point under Cloud Run's exact environment variables: migrations applied, 2,277 and 1,073 transactions seeded, health endpoint healthy, interface rendered, and the session cookie confirmed to carry HttpOnly, SameSite=Strict and Secure."],
   ["4", "Pushed to GitHub", "The repository already held the built interface and the release archive, so the same commit is both the local download and the deployment source."],
   ["5", "Deployed to Cloud Run", "gcloud run deploy builds the container with Cloud Build and publishes it; the service is pinned to a single instance because the database is a file inside the container."],
-  ["6", "Verified the live URL", "Loaded the public URL, signed in as the demo profile, exercised each screen, and checked it on a phone."],
+  ["6", "Verified the live URL", "Signed in as both demo profiles against the deployed service and exercised every screen: 117 and 36 imported documents, 79 and 36 reconciled periods, budget targets, the review queue, and a document opened from storage. Warm responses came back in about 0.3 s."],
+  ["7", "Fixed what deploying exposed", "Two defects that only appear once the app is built in one place and run in another: an absolute SQLite path that silently became relative, and document rows recording absolute file paths, which would have made every document unreadable in the container. Both now have regression tests."],
 ];
 
 const doc = new Document({
@@ -110,8 +111,8 @@ const doc = new Document({
       rule(),
 
       h1("1. Live application URL"),
-      p("Cloud Run assigns the URL when the service is first deployed. Paste it here once the deploy completes:"),
-      mono("https://______________________.run.app"),
+      mono("https://meridian-792468836580.us-central1.run.app"),
+      p("Sign in with either demo profile — the welcome screen fills the password in. Jordan Reyes opens on a year of imported statements, reconciled periods and budget targets; Priya Raman is a second, entirely separate ledger."),
       p("Platform note: the course template describes AWS App Runner. Meridian is deployed to Google Cloud Run instead, which is the platform used for the first application and the target named in this project's own architecture document. Cloud Run is the equivalent service — a container is built from the GitHub repository and served on a public HTTPS URL with automatic scaling and a free tier.", { italics: true }),
 
       h1("2. Deployment steps"),
@@ -137,8 +138,8 @@ const doc = new Document({
       h1("3. Evidence"),
       h2("Screenshot 1 — the application running on its Cloud Run URL"),
       ...shotBox("The live https://….run.app address visible in the URL bar, signed in as Jordan Reyes on the Dashboard, with the system clock visible."),
-      h2("Screenshot 2 — the Cloud Run console showing both services running"),
-      ...shotBox("Google Cloud console → Cloud Run, showing this service and the first application's service, both with a green Running status, with the system clock visible."),
+      h2("Screenshot 2 — the Cloud Run console showing the service running"),
+      ...shotBox("Google Cloud console → Cloud Run, showing the meridian service with a green tick and its URL, with the system clock visible. (The first application is on Firebase Hosting, not Cloud Run, so it does not appear on this page — a static site has no container to run.)"),
       h2("Screenshot 3 — the GitHub repository holding this application's code"),
       ...shotBox("github.com/darrshen97-ui/Meridian with the file list visible, with the system clock visible."),
 
@@ -149,9 +150,10 @@ const doc = new Document({
       p("The practical difference is that the second deployment is one command that anyone can repeat, and it is reproducible: the same Dockerfile that Cloud Build uses can be run locally, so the deployment artefact is testable rather than something that only exists in the cloud."),
 
       h1("5. Challenges, and how AI helped"),
-      h2("A path bug that only exists in a container"),
+      h2("Two path bugs that only exist once the app moves"),
       p("Preparing the image surfaced a genuine defect. The code that ensures the database directory exists split the connection string on three slashes, which strips the leading slash of an absolute path: sqlite:////tmp/meridian/meridian.db silently became the relative tmp/meridian/meridian.db. Local runs use a relative path, so 157 passing tests had never touched the branch; the very first container start failed to open its database. It is now parsed with the database library's own URL parser, and a regression test covers both the absolute and relative forms."),
-      p("The lesson matches the one from the testing assignment: a green test run proves the code is correct in the environment the tests run in, and deployment is a different environment."),
+      p("The second was the same shape and cost more. Uploaded statements were recorded in the database by absolute path. That is harmless while one machine writes and reads them, and wrong the moment the database is built somewhere and opened somewhere else — which is exactly what a container image and a downloadable zip both do. Every document row would have pointed at a file that did not exist, and the Documents screen would have failed on all 153 of them while still listing them as imported. Paths are now stored relative to the data directory."),
+      p("The lesson matches the one from the testing assignment: a green test run proves the code is correct in the environment the tests run in, and deployment is a different environment. Both of these were found by running the deployment artefact, not by reading it."),
 
       h2("Paying for the same work on every visit"),
       p("Scale-to-zero has a cost of its own: the first request after an idle period waits for a container to start, and the start-up applied database migrations and seeded 3,350 transactions every single time — identical work with an identical result, charged as CPU and paid for in latency by whoever arrived first. The database is now built once during the image build and copied into place at start-up, which measured 4.4 seconds down to 0.76. The original path still runs when no prepared database is present, so an older image, or a future move to a hosted database, starts correctly either way."),
